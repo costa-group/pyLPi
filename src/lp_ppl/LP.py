@@ -1,1 +1,0 @@
-from ppl import Variable
