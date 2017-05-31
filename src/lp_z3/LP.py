@@ -37,3 +37,8 @@ class Constraint_System:
 
     def clear(self):
         self.cons = []
+
+
+class Polyhedron:
+    def add_constrain():
+        pass
