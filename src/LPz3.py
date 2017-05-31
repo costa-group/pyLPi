@@ -1,44 +1,41 @@
-import ppl
+from ppl import Variable
+from ppl import Linear_Expression
+from ppl import Constraint
+from ppl import Constrain_System
 import z3
 
-class Variable(ppl.Variable):
-    def imhere(self):
+
+class LPPolyhedron:
+
+    def __init__(self, constraint_system, dim=-1):
+        if dim < 0:
+            dim = constraint_system.space_dimension()
         pass
-class Linear_Expression(ppl.Linear_Expression):
-    def imhere(self):
+
+    def add_constraint(self, constraint):
         pass
-class Constraint(ppl.Constraint):
-    def imhere(self):
+
+    def add_constraints(self, constraints):
         pass
-class Constraint_System:
-    def __init__(self,c=[]):
-        if(isinstance(c,ppl.Constraint)):
-            self.cons = [c]
-        elif(isinstance(c,list)):
-            self.cons = c
-        else:
-            raise ValueError("Constraint or list of Constraints")
-    def insert(self, c):
-        self.cons.append(c)
 
-    def has_strict_inequalities(self):
-        for c in self.cons:
-            if(c.is_strict_inequality()):
-                return True
-        return False
-    def has_equalities(self):
-        for c in self.cons:
-            if(c.is_equality()):
-                return True
-        return False
-
-    def empty(self):
-        return len(self.cons)==0
-
-    def clear(self):
-        self.cons = []
-
-
-class Polyhedron:
-    def add_constrain():
+    def contains_integer_point(self):
         pass
+
+    def is_disjoint_from(self, polyhedron):
+        pass
+
+    def is_empty(self):
+        pass
+
+    def constraints(self):
+        pass
+
+    def get_point(self):
+        pass
+
+    def minimize(self):
+        pass
+
+    def maximize(self):
+        pass
+
