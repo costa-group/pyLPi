@@ -1,7 +1,7 @@
 from ppl import Variable
 from ppl import Linear_Expression
 from ppl import Constraint
-from ppl import Constrain_System
+from ppl import Constraint_System
 from ppl import Polyhedron
 from ppl import C_Polyhedron
 
@@ -10,6 +10,9 @@ class LPPolyhedron:
 
     _poly = None
 
+    def _dummy(self):
+        print("yes!")
+        
     def __init__(self, constraint_system, dim=-1):
         if dim < 0:
             dim = constraint_system.space_dimension()
