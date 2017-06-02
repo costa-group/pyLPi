@@ -1,3 +1,4 @@
 sphinx_rtd_theme
 Cython == 0.23.4
 pplpy
+Cython == 0.23.4
