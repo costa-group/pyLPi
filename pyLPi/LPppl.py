@@ -10,9 +10,6 @@ class LPPolyhedron:
 
     _poly = None
 
-    def _dummy(self):
-        print("yes!")
-
     def __init__(self, constraint_system, dim=-1):
         if dim < 0:
             dim = constraint_system.space_dimension()
@@ -24,11 +21,29 @@ class LPPolyhedron:
     def add_constraints(self, constraints):
         self._poly.add_constraints(constraints)
 
+    def add_constraint_system(self, constraint_system):
+        self._poly.add_constraint_system(constraint_system)
+        
     def get_dimension(self):
         return self._poly.space_dimension()
 
     def get_constraints(self):
         return self._poly.constraints()
+
+    def get_point(self):
+        pass
+    
+    def get_generators(self):
+        return self._poly.get_generators()
+
+    def contains_integer_point(self):
+        return self._poly.contains_integer_poin()
+
+    def get_integer_point(self):
+        pass
+
+    def get_relative_interior_point():
+        pass
 
     def minimize(self):
         pass
@@ -39,9 +54,6 @@ class LPPolyhedron:
     def is_empty(self):
         return self._poly.is_empty()
 
-    def get_point(self):
-        pass
-
     def is_implied(self, constraint):
         pass
 
@@ -51,9 +63,6 @@ class LPPolyhedron:
     def __repr__(self):
         return self._poly.__repr__()
 
-    def get_generators(self):
-        return self._poly.get_generators()
-
     def int_minimize(self, something):
         pass
 
@@ -62,12 +71,6 @@ class LPPolyhedron:
 
     def is_bounded(self):
         # return self._poly.is_bounded()
-        pass
-
-    def get_integer_point(self):
-        pass
-
-    def get_relative_interior_point():
         pass
 
     def minimize_constraint_system():
