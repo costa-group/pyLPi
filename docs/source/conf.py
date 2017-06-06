@@ -21,7 +21,7 @@ import sys
 import sphinx_rtd_theme
 from mock import Mock as MagicMock
 sys.path.insert(0, os.path.abspath('../../pyLPi/'))
-from LPi import *
+from LPi import LPi
 
 # -- General configuration ------------------------------------------------
 
