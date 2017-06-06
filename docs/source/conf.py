@@ -19,6 +19,7 @@
 import os
 import sys
 import sphinx_rtd_theme
+from mock import Mock as MagicMock
 sys.path.insert(0, os.path.abspath('../../pyLPi/'))
 from LPi import *
 
@@ -53,7 +54,7 @@ source_suffix = ['.rst', '.md']
 master_doc = 'index'
 
 # General information about the project.
-project = u'pyRankFinder'
+project = u'pyLPi'
 copyright = u'2017, Jesús Doménech, Samir Genaim'
 author = u'Jesús Doménech, Samir Genaim'
 
@@ -109,7 +110,7 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'pyRankFinderdoc'
+htmlhelp_basename = 'pyLPidoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -136,7 +137,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'pyRankFinder.tex', u'pyRankFinder Documentation',
+    (master_doc, 'pyLPi.tex', u'pyLPi Documentation',
      u'Jesús Doménech, Samir Genaim', 'manual'),
 ]
 
@@ -146,7 +147,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'pyrankfinder', u'pyRankFinder Documentation',
+    (master_doc, 'pylpi', u'pyLPi Documentation',
      [author], 1)
 ]
 
@@ -157,8 +158,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'pyRankFinder', u'pyRankFinder Documentation',
-     author, 'pyRankFinder', 'One line description of project.',
+    (master_doc, 'pyLPi', u'pyLPi Documentation',
+     author, 'pyLPi', 'One line description of project.',
      'Miscellaneous'),
 ]
 
@@ -167,3 +168,6 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
+
+MOCK_MODULES = ['ppl','z3']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
