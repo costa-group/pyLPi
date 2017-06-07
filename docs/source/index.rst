@@ -8,16 +8,6 @@ Linear Programming interface based on PPL
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: LPppl
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-.. automodule:: LPz3
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
 Indices and tables
 ==================
