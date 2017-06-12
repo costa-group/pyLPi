@@ -23,7 +23,7 @@ class LPPolyhedron:
 
     def add_constraint_system(self, constraint_system):
         self._poly.add_constraint_system(constraint_system)
-        
+
     def get_dimension(self):
         return self._poly.space_dimension()
 
@@ -32,7 +32,7 @@ class LPPolyhedron:
 
     def get_point(self):
         pass
-    
+
     def get_generators(self):
         return self._poly.get_generators()
 
