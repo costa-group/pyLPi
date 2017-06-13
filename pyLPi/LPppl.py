@@ -11,12 +11,14 @@ class LPPolyhedron:
     _poly = None
 
     def __init__(self, constraint_system, dim=-1):
-        if dim < 0:
-            self._poly = C_Polyhedron(constraint_system)
-        else:
-            self._poly = C_Polyhedron(dim)
-            if not(constraint_system is None):
-                self._poly.add_constraints(constraint_system)
+	if constraint_system is None:
+            constraint_system = Constraint_System()
+	cdim = constraint_system.space_dimension()
+        if dim < cdim:
+            dim = cdim
+
+	self._poly = C_Polyhedron(dim)
+        self._poly.add_constraints(constraint_system)
 
     def add_constraint(self, constraint):
         self._poly.add_constraint(constraint)
