@@ -12,8 +12,9 @@ class LPPolyhedron:
 
     def __init__(self, constraint_system, dim=-1):
         if dim < 0:
-            dim = constraint_system.space_dimension()
-        self._poly = C_Polyhedron(constraint_system, dim)
+            self._poly = C_Polyhedron(constraint_system)
+        else:
+            self._poly = C_Polyhedron(constraint_system, dim)
 
     def add_constraint(self, constraint):
         self._poly.add_constraint(constraint)
@@ -31,7 +32,22 @@ class LPPolyhedron:
         return self._poly.constraints()
 
     def get_point(self):
-        pass
+        if self._poly.is_empty():
+            return None
+        q = C_Polyhedron(self._poly)
+        x = Variable(0)
+        e = Linear_Expression(x)
+        q.add_constraint(x >= 0)
+        r = q.minimize(e)
+
+        if r['bounded']:
+            return r['generator']
+
+        q = C_Polyhedron(self._poly)
+        q.add_constraint(x <= 0)
+        r = q.maximize(e)
+
+        return r['generator']
 
     def get_generators(self):
         return self._poly.get_generators()
