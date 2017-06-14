@@ -65,11 +65,11 @@ class LPPolyhedron:
     def get_relative_interior_point():
         pass
 
-    def minimize(self):
-        pass
+    def minimize(self, expression):
+        return self._poly.minimize(expression)
 
-    def maximize(self):
-        pass
+    def maximize(self, expression):
+        return self._poly.maximize(expression)
 
     def is_empty(self):
         return self._poly.is_empty()

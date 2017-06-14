@@ -87,11 +87,11 @@ class C_Polyhedron:
         """
         return self._poly.get_relative_interior_point()
 
-    def minimize(self):
-        return self._poly.minimize()
+    def minimize(self, expression):
+        return self._poly.minimize(expression)
 
-    def maximize(self):
-        return self._poly.maximize()
+    def maximize(self, expression):
+        return self._poly.maximize(expression)
 
     def is_empty(self):
         """Returns true if and only if it is an empty polyhedron.
