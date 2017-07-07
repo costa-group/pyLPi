@@ -82,10 +82,10 @@ class C_Polyhedron:
         """
         return self._poly.get_integer_point()
 
-    def get_relative_interior_point():
+    def get_relative_interior_point(self, max_dim):
         """Returns a random interior point.
         """
-        return self._poly.get_relative_interior_point()
+        return self._poly.get_relative_interior_point(max_dim)
 
     def minimize(self, expression):
         return self._poly.minimize(expression)

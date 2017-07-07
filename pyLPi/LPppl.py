@@ -1,3 +1,5 @@
+from math import ceil
+from math import floor
 from ppl import Variable
 from ppl import Linear_Expression
 from ppl import Constraint
@@ -88,8 +90,57 @@ class LPPolyhedron:
     def get_integer_point(self):
         pass
 
-    def get_relative_interior_point():
-        pass
+    def get_relative_interior_point(self):
+        self._init_poly()
+        if self._poly.is_empty():
+            return None
+        q = C_Polyhedron(self._poly)
+        point = [0]
+        for i in range(1, self._dimension):
+            ci = None
+            li = Variable(i)
+            exp_li = Linear_Expression(li)
+            # minimize li with respect q
+            ra = q.minimize(exp_li)
+            if ra['bounded']:
+                a = ra['generator'].coefficient(li)
+            else:
+                a = None  # a = -Inf
+
+            # maximize li with respect q
+            rb = q.maximize(exp_li)
+            if rb['bounded']:
+                b = rb['generator'].coefficient(li)
+                if a is None:  # (-inf, b) is equivalent to (b-N, b)
+                    a = b - 10
+            else:
+                if a is None:  # (-inf, inf) is equivalent to (-N, N)
+                    a = -5
+                b = a + 10  # (a, inf) is equivalent to (a, a+N)
+
+            # select ci
+            if a == b:
+                ci = a
+            elif a < 0 and b > 0:
+                ci = 0
+            else:
+                aux1 = ceil(a+1e-12)   # smallest integer greater than a
+                aux2 = floor(b-1e-12)  # biggest integer lower than b
+                if aux1 < b:  # aux1 is in (a, b) ??
+                    ci = aux1
+                elif a < aux2:  # aux2 is in (a, b) ??
+                    ci = aux2
+                else:  # no integers in (a, b)
+                    ci = (b-a) / 2.0 + a
+
+            point.append(ci)
+            q.add_constraint(li == ci)
+        l0 = Variable(0)
+        exp_l0 = Linear_Expression(l0)
+        r = q.minimize(exp_l0)
+        c0 = r['generator'].coefficient(l0)
+        point[0] = c0
+        return point
 
     def minimize(self, expression):
         self._init_poly()
