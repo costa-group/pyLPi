@@ -56,9 +56,8 @@ class LPPolyhedron:
         return self._dimension
 
     def get_constraints(self):
-        if self._existsPoly:
-            return self._poly.constraints()
-        return [c for c in self._constraints]
+        self._init_poly()
+        return self._poly.constraints()
 
     def get_point(self):
         self._init_poly()
