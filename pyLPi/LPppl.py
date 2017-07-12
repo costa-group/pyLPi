@@ -51,9 +51,8 @@ class LPPolyhedron:
             self._constraints.insert(c)
 
     def get_dimension(self):
-        if self._existsPoly:
-            return self._poly.space_dimension()
-        return self._dimension
+        self._init_poly()
+        return self._poly.space_dimension()
 
     def get_constraints(self):
         self._init_poly()
@@ -89,51 +88,52 @@ class LPPolyhedron:
     def get_integer_point(self):
         pass
 
-    def get_relative_interior_point(self):
+    def get_relative_interior_point(self, dimension=None):
         self._init_poly()
         if self._poly.is_empty():
             return None
+        if dimension is None or dimension > self.get_dimension():
+            dimension = self.get_dimension()
         q = C_Polyhedron(self._poly)
         point = [0]
-        for i in range(1, self._dimension):
+        for i in range(1, dimension):
             ci = None
             li = Variable(i)
             exp_li = Linear_Expression(li)
             # minimize li with respect q
             ra = q.minimize(exp_li)
-            if ra['bounded']:
-                a = ra['generator'].coefficient(li)
-            else:
-                a = None  # a = -Inf
-
             # maximize li with respect q
             rb = q.maximize(exp_li)
-            if rb['bounded']:
-                b = rb['generator'].coefficient(li)
-                if a is None:  # (-inf, b) is equivalent to (b-N, b)
-                    a = b - 10
-            else:
-                if a is None:  # (-inf, inf) is equivalent to (-N, N)
-                    a = -5
-                b = a + 10  # (a, inf) is equivalent to (a, a+N)
-
-            # select ci
-            if a == b:
-                ci = a
-            elif a < 0 and b > 0:
+            if not ra['bounded'] and not rb['bounded']:
                 ci = 0
+            elif not ra['bounded']:
+                b = rb['generator'].coefficient(li)
+                ci = 0 if (b > 0) else ceil(b - 1.0)
+            elif not rb['bounded']:
+                a = ra['generator'].coefficient(li)
+                print(a)
+                ci = 0 if (a < 0) else floor(a + 1.0)
             else:
-                aux1 = ceil(a+1e-12)   # smallest integer greater than a
-                aux2 = floor(b-1e-12)  # biggest integer lower than b
-                if aux1 < b:  # aux1 is in (a, b) ??
-                    ci = aux1
-                elif a < aux2:  # aux2 is in (a, b) ??
-                    ci = aux2
-                else:  # no integers in (a, b)
-                    ci = (b-a) / 2.0 + a
+                a = ra['generator'].coefficient(li)
+                b = rb['generator'].coefficient(li)
+                if a == b:
+                    ci = a
+                elif a < 0 and b > 0:
+                    ci = 0
+                else:
+                    mid = (b-a) / 2.0 + a
+                    aux1 = ceil(mid)
+                    aux2 = floor(mid)
+                    if aux1 < b:  # aux1 is in (a, b) ??
+                        ci = aux1
+                    elif a < aux2:  # aux2 is in (a, b) ??
+                        ci = aux2
+                    else:  # no integers in (a, b)
+                        ci = mid
 
             point.append(ci)
             q.add_constraint(li == ci)
+
         l0 = Variable(0)
         exp_l0 = Linear_Expression(l0)
         r = q.minimize(exp_l0)
