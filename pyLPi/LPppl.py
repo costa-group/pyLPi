@@ -111,7 +111,6 @@ class LPPolyhedron:
                 ci = 0 if (b > 0) else ceil(b - 1.0)
             elif not rb['bounded']:
                 a = ra['generator'].coefficient(li)
-                print(a)
                 ci = 0 if (a < 0) else floor(a + 1.0)
             else:
                 a = ra['generator'].coefficient(li)
