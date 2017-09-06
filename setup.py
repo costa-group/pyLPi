@@ -7,15 +7,8 @@ base = os.path.dirname(os.path.abspath(__file__))
 
 VERSION = open(os.path.join(base, 'version.txt')).read()[:-1]
 
-requires = []
+requires = ['pplpy', 'z3']
 
-if sys.version_info<(3,0,0):
-    requires = ['pplpy', 'z3', 'cython', 'gmpy2', 'cysignals']
-else:
-    requires = ['pplpy', 'z3', 'gmpy2', 'cysignals']
-
-dependencies = ["git+https://github.com/videlec/pplpy.git#egg=pplpy",
-                "git+https://github.com/aleaxit/gmpy.git#egg=gmpy2"]
 
 setup(
     name='pylpi',
@@ -32,7 +25,6 @@ setup(
     package_dir={'lpi': os.path.join(base, 'lpi')},
     package_data={'lpi': ['*.py']},
     install_requires=requires,
-    dependency_links=dependencies,
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: C++",

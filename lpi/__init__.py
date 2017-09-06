@@ -1,1 +1,1 @@
-from LPi import C_Polyhedron
+from lpi import C_Polyhedron
