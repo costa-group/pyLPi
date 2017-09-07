@@ -5,8 +5,7 @@ UP=""
 FORCE=false
 pvers="false"
 
-for i in "$@"
-do
+for i in "$@"; do
     case $i in
 	-up|--update)
 	    UP="--upgrade"
@@ -35,7 +34,28 @@ do
 	    shift # past argument=value
 	    ;;
 	*)
-            # unknown option
+	    >&2 cat  <<EOF 
+ERROR: install.sh [OPTIONS]
+
+[OPTIONS]
+
+    -f | --force ) 
+                   force default values: 
+                   Install python dependencies and
+                   Install UNIX packages
+
+    -up | --update ) 
+                   Update or Upgrade all the packages.
+
+    -un | --uninstall )
+                   Uninstall all except UNIX packages.
+
+    -p=[VERSION] | --python=[VERSION] )
+                   Install only for python version number [VERSION].
+                   It has to be 2 or 3.
+
+EOF
+	    exit -1
 	    ;;
     esac
 done
@@ -92,32 +112,15 @@ while [ "$P2" = "true" -a "$P3" = "true" ]; do
     esac
 done
 
-# mdepen=true
-# while true; do
-#     read -p "Do you want to install the Non-standar Python dependencies? [Y/n]" yn
-#     case $yn in
-#         [yY][eE][sS]|[yY])
-# 	    break;;
-# 	[nN][oO]|[nN])
-# 	    echo "Be sure to have them already installed, otherwise the installation will crash."
-# 	    mdepen=false
-# 	    break;;
-#         "")
-# 	    break;;
-#         * ) echo "Invalid option."; echo $yn;;
-#     esac
-# done
 
 if [ "$FORCE" = "true" ]; then
-    mdepen=true
     pdepen=true
     udepen=true
 else
 
-    mdepen=true
-    pdepen=$mdepen
+    pdepen=true
 
-    while [[ "$mdepen" = "true" ]]; do
+    while true; do
 	read -p "Do you want to install the standar Python dependencies? [Y/n]" yn
 	case $yn in
             [yY][eE][sS]|[yY])
@@ -153,7 +156,6 @@ fi
 if [ "$udepend" = "true" ]; then
     sudo apt-get install libppl_dev cython build_essentials python_sphinx libmpfr_dev libmpc_dev libgmp_dev
 fi
-
 
 
 install()
