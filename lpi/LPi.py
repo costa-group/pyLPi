@@ -1,4 +1,3 @@
-# from RankConfig import getLPMod
 import LPppl
 import LPz3
 

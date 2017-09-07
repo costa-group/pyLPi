@@ -181,7 +181,10 @@ install()
 	fi	
     fi
 
-    pip$vers $UN"install" $flags git+https://github.com/jesusjda/pyLPi.git#egg=pyLPi
+    #pip$vers $UN"install" $flags git+https://github.com/jesusjda/pyLPi.git#egg=pyLPi
+    python$vers $basedir/setup.py build --build-base=$basedir
+    python$vers $basedir/setup.py install 
+
 
 }
 

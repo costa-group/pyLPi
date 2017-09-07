@@ -8,6 +8,7 @@ import z3
 class LPPolyhedron:
 
     def __init__(self, constraint_system, dim=-1):
+        raise NotImplementedError()
         if dim < 0:
             dim = constraint_system.space_dimension()
         pass
@@ -20,7 +21,7 @@ class LPPolyhedron:
 
     def add_constraint_system(self, constraint_system):
         pass
-        
+
     def get_dimension(self):
         pass
 
