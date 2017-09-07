@@ -159,9 +159,6 @@ else
 	esac
     done
 fi
-echo "UNIX: " $udepen
-echo "python: " $pdepen
-echo "own: " $mdepen
 
 
 if [ "$udepend" = "true" ]; then
@@ -178,9 +175,9 @@ install()
 	flags=$flags" $UP"
     fi
     vers=$1
-    echo "------------------------------"
-    echo "Installing on Python $vers"
-    echo "------------------------------"
+    echo "----------------------------------"
+    echo "Installing pyLPi on Python $vers"
+    echo "----------------------------------"
     if [ "$pdepen" = "true" ]; then
 	pip$vers $UN"install" $flags z3 cython cysignals virtualenv
 
