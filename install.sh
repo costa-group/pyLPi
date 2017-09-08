@@ -4,7 +4,8 @@ UN=""
 UP=""
 FORCE=false
 pvers="false"
-
+P3=false
+P2=false
 for i in "$@"; do
     case $i in
 	-up|--update)
@@ -21,11 +22,10 @@ for i in "$@"; do
 	    pvers="${i#*=}"
 	    if [ "$pvers" = "2" ]; then
 		P2=true
-		P3=false
+
 	    fi
 	    if [ "$pvers" = "3" ]; then
 		P3=true
-		P2=false
 	    fi
 	    shift # past argument=value
 	    ;;
@@ -97,7 +97,7 @@ else
 fi
 
 # Python 2 or 3 or both?
-while [ "$P2" = "true" -a "$P3" = "true" ]; do
+while [ "$pvers" = "false" -a "$P2" = "true" -a "$P3" = "true" ]; do
     read -p "Which python version do you want to use? [2/3/B] (default: B - Both)" yn
     case $yn in
         [2]*)
