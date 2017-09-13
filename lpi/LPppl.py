@@ -4,7 +4,6 @@ from ppl import Variable
 from ppl import Linear_Expression
 from ppl import Constraint
 from ppl import Constraint_System
-from ppl import Polyhedron
 from ppl import C_Polyhedron
 
 
