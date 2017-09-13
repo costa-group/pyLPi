@@ -6,17 +6,18 @@ FORCE=false
 pvers="false"
 P3=false
 P2=false
+LOCAL=false
 for i in "$@"; do
     case $i in
 	-up|--update)
 	    UP="--upgrade"
 	    UN=""
-	    shift # past argument=value
+	    shift
 	    ;;
 	-un|--uninstall)
 	    UP=""
 	    UN="un"
-	    shift # past argument=value
+	    shift
 	    ;;
 	-p=*|--python=*)
 	    pvers="${i#*=}"
@@ -27,11 +28,15 @@ for i in "$@"; do
 	    if [ "$pvers" = "3" ]; then
 		P3=true
 	    fi
-	    shift # past argument=value
+	    shift
 	    ;;
 	-f|--force)
 	    FORCE=true
-	    shift # past argument=value
+	    shift
+	    ;;
+	-l|--local)
+	    LOCAL=true
+	    shift
 	    ;;
 	*)
 	    >&2 cat  <<EOF 
@@ -43,6 +48,10 @@ ERROR: install.sh [OPTIONS]
                    force default values: 
                    Install python dependencies and
                    Install UNIX packages
+
+    -l | --local ) 
+                   Install local version with local modifications.
+                   Otherwise, git repository version will be installed.
 
     -up | --update ) 
                    Update or Upgrade all the packages.
@@ -152,9 +161,10 @@ else
     done
 fi
 
+	python$vers -m pip $UN"install" $flags git+https://github.com/jesusjda/pyLPi.git#egg=pyLPi
 
 if [ "$udepend" = "true" ]; then
-    sudo apt-get install libppl-dev cython build_essential python-sphinx libmpfr-dev libmpc-dev libgmp-dev
+    sudo apt-get install libppl-dev cython build-essential python-sphinx libmpfr-dev libmpc-dev libgmp-dev
 fi
 
 
@@ -176,10 +186,11 @@ install()
 	python$vers -m pip $UN"install" $lflags git+https://github.com/videlec/pplpy.git#egg=pplpy
     fi
 
-    #pip$vers $UN"install" $flags git+https://github.com/jesusjda/pyLPi.git#egg=pyLPi
-    python$vers $basedir/setup.py build --build-base=$basedir
-    python$vers $basedir/setup.py install 
-
+    if [ "$LOCAL" = "true" ]; then 
+	python$vers -m pip $UN"install" $lflags .
+    else
+	python$vers -m pip $UN"install" $lflags git+https://github.com/jesusjda/pyLPi.git#egg=pyLPi
+    fi
 
 }
 
