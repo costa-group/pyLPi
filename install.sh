@@ -154,31 +154,26 @@ fi
 
 
 if [ "$udepend" = "true" ]; then
-    sudo apt-get install libppl_dev cython build_essentials python_sphinx libmpfr_dev libmpc_dev libgmp_dev
+    sudo apt-get install libppl-dev cython build_essential python-sphinx libmpfr-dev libmpc-dev libgmp-dev
 fi
 
 
 install()
 {
     if [ "$UN" = "un" ]; then
-	flags=" -y"
+	lflags=" -y"
     else
-	flags=$flags" $UP"
+	lflags=$flags" $UP"
     fi
     vers=$1
     echo "----------------------------------"
     echo "Installing pyLPi on Python $vers"
     echo "----------------------------------"
     if [ "$pdepen" = "true" ]; then
-	pip$vers $UN"install" $flags z3 cython cysignals virtualenv
-
-	if [ "$vers" = "2" ]; then
-	    pip2 $UN"install" $flags gmpy2
-	    pip2 $UN"install" $flags pplpy
-	else
-	    pip3 $UN"install" $flags git+https://github.com/aleaxit/gmpy.git#egg=gmpy2
-	    pip3 $UN"install" $flags git+https://github.com/videlec/pplpy.git#egg=pplpy
-	fi	
+	python$vers -m pip $UN"install" $lflags z3 'Cython==0.26' virtualenv
+	python$vers -m pip $UN"install" $lflags cysignals 
+	python$vers -m pip $UN"install" $lflags git+https://github.com/aleaxit/gmpy.git@gmpy2-2.1.0a0#egg=gmpy2
+	python$vers -m pip $UN"install" $lflags git+https://github.com/videlec/pplpy.git#egg=pplpy
     fi
 
     #pip$vers $UN"install" $flags git+https://github.com/jesusjda/pyLPi.git#egg=pyLPi
@@ -194,9 +189,6 @@ if [ "$P2" = "true" ]; then
 fi
 
 if [ "$P3" = "true" ]; then
-    if [ "$udepend" = "true" ]; then
-	sudo apt-get install cython3
-    fi
     easy_install3 $flags pip
     install 3
 fi
