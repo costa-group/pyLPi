@@ -4,6 +4,12 @@ import LPz3
 
 class C_Polyhedron:
     """A closed convex polyhedron.
+    From a system of constraints.
+
+        :param cons: Constraint system
+        :type cons: ppl.Constraint_System :param dim: dimension
+            of the `universe`, optional. Defaults Constraint System dimension.
+        :type dim: int
     """
 
     _poly = None
