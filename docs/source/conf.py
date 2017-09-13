@@ -24,10 +24,11 @@ try:
 except ImportError:
     from unittest.mock import MagicMock
 sys.path.append(os.path.abspath('../../'))
-import lpi
 
-MOCK_MODULES = ['gmpy2', 'pplpy', 'ppl', 'z3']
+MOCK_MODULES = ['ppl', 'z3']
 sys.modules.update((mod_name, MagicMock()) for mod_name in MOCK_MODULES)
+
+import lpi
 
 base = os.path.dirname(os.path.abspath(__file__))
 # -- General configuration ------------------------------------------------
