@@ -69,7 +69,6 @@ EOF
     esac
 done
 
-
 exists(){
     command -v "$1" >/dev/null 2>&1
 }
@@ -81,7 +80,6 @@ if [ "$pvers" = "false" ]; then
     else
 	P2=false
     fi
-    
     if exists python3; then
 	P3=true
     else
@@ -95,8 +93,6 @@ flags=""
 if [ "$EUID" -ne 0 ]; then
     flags=$flags" --user"
 fi
-
-
 
 # get base folder
 if [ "$(uname -s)" = 'Linux' ]; then
@@ -126,7 +122,6 @@ if [ "$FORCE" = "true" ]; then
     pdepen=true
     udepen=true
 else
-
     pdepen=true
 
     while true; do
@@ -163,8 +158,12 @@ fi
 
 	python$vers -m pip $UN"install" $flags git+https://github.com/jesusjda/pyLPi.git#egg=pyLPi
 
-if [ "$udepend" = "true" ]; then
-    sudo apt-get install libppl-dev cython build-essential python-sphinx libmpfr-dev libmpc-dev libgmp-dev
+if [ "$udepen" = "true" ]; then
+    sudo apt-get install python-nose
+    sudo apt-get install libgmp-dev
+    sudo apt-get install libmpfr-dev
+    sudo apt-get install libmpc-dev
+    sudo apt-get install libppl-dev
 fi
 
 
