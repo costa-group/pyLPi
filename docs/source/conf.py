@@ -19,10 +19,16 @@
 import os
 import sys
 import sphinx_rtd_theme
-from mock import Mock as MagicMock
-sys.path.insert(0, os.path.abspath('../../pyLPi/'))
-from LPi import LPi
+try:
+    from mock import Mock as MagicMock
+except ImportError:
+    from unittest.mock import MagicMock
+import lpi
 
+MOCK_MODULES = ['gmpy2', 'pplpy', 'z3']
+sys.modules.update((mod_name, MagicMock()) for mod_name in MOCK_MODULES)
+
+base = os.path.dirname(os.path.abspath(__file__))
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -33,13 +39,13 @@ from LPi import LPi
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.todo',
-    'sphinx.ext.coverage',
-    'sphinx.ext.imgmath',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages']
+              'sphinx.ext.autosummary',
+              'sphinx.ext.intersphinx',
+              'sphinx.ext.todo',
+              'sphinx.ext.coverage',
+              'sphinx.ext.imgmath',
+              'sphinx.ext.viewcode',
+              'sphinx.ext.githubpages']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -57,13 +63,14 @@ master_doc = 'index'
 project = u'pyLPi'
 copyright = u'2017, Jesús Doménech, Samir Genaim'
 author = u'Jesús Doménech, Samir Genaim'
+description = u'Common interface to ppl and z3'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = u'0'
+version = open(os.path.join(base, '../../version.txt')).read()[:-1]
 # The full version, including alpha/beta/rc tags.
 release = u'0'
 
@@ -159,15 +166,10 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'pyLPi', u'pyLPi Documentation',
-     author, 'pyLPi', 'One line description of project.',
+     author, 'lpi', 'One line description of project.',
      'Miscellaneous'),
 ]
 
-
-
-
-# Example configuration for intersphinx: refer to the Python standard library.
+# Example configuration for intersphinx: refer 1to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
 
-MOCK_MODULES = ['ppl','z3']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)

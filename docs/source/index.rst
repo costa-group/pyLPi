@@ -3,7 +3,7 @@ pyLPi's documentation!
 
 Linear Programming interface based on PPL
 
-.. automodule:: LPi
+.. automodule:: lpi
     :members:
     :undoc-members:
     :show-inheritance:
