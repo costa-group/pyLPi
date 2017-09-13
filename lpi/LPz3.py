@@ -30,7 +30,7 @@ class LPPolyhedron:
 
     def get_point(self):
         pass
-    
+
     def get_generators(self):
         pass
 

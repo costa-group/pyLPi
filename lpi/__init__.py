@@ -87,9 +87,13 @@ class C_Polyhedron:
         return self._poly.get_relative_interior_point(max_dim)
 
     def minimize(self, expression):
+        """Returns the minimun of the expression in the polyhedron
+        """
         return self._poly.minimize(expression)
 
     def maximize(self, expression):
+        """Returns the maximun of the expression in the polyhedron
+        """
         return self._poly.maximize(expression)
 
     def is_empty(self):
