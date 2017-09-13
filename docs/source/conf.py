@@ -23,9 +23,10 @@ try:
     from mock import Mock as MagicMock
 except ImportError:
     from unittest.mock import MagicMock
+sys.path.append(os.path.abspath('../../'))
 import lpi
 
-MOCK_MODULES = ['gmpy2', 'pplpy', 'z3']
+MOCK_MODULES = ['gmpy2', 'pplpy', 'ppl', 'z3']
 sys.modules.update((mod_name, MagicMock()) for mod_name in MOCK_MODULES)
 
 base = os.path.dirname(os.path.abspath(__file__))
@@ -166,10 +167,8 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'pyLPi', u'pyLPi Documentation',
-     author, 'lpi', 'One line description of project.',
-     'Miscellaneous'),
+     author, 'lpi', description, 'Miscellaneous'),
 ]
 
 # Example configuration for intersphinx: refer 1to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
-
