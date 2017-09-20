@@ -19,8 +19,9 @@ class C_Polyhedron:
         """Builds a C polyhedron from a system of constraints.
 
         :param cons: Constraint system
-        :type cons: ppl.Constraint_System :param dim: dimension
-            of the `universe`, optional. Defaults Constraint System dimension.
+        :type cons: ppl.Constraint_System 
+	:param dim: dimension of the `universe`, optional.
+	Defaults Constraint System dimension.
         :type dim: int
         """
         if lplib is None:
