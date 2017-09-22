@@ -1,5 +1,5 @@
-import LPppl
-import LPz3
+import lpi.LPppl
+import lpi.LPz3
 
 
 class C_Polyhedron:
