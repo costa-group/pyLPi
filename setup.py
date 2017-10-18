@@ -7,7 +7,7 @@ base = os.path.dirname(os.path.abspath(__file__))
 
 VERSION = open(os.path.join(base, 'version.txt')).read()[:-1]
 
-requires = ['pplpy', 'z3']
+requires = ['pplpy', 'z3-solver']
 
 
 setup(
