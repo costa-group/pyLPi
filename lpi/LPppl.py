@@ -25,7 +25,7 @@ class LPPolyhedron:
         self._constraints = constraint_system
         self._dimension = dim
 
-    def _init_poly(self):
+    def _build_poly(self):
         if self._poly is None:
             self._existsPoly = True
             self._poly = C_Polyhedron(self._dimension)
@@ -50,15 +50,15 @@ class LPPolyhedron:
             self._constraints.insert(c)
 
     def get_dimension(self):
-        self._init_poly()
+        self._build_poly()
         return self._poly.space_dimension()
 
     def get_constraints(self):
-        self._init_poly()
+        self._build_poly()
         return self._poly.constraints()
 
     def get_point(self):
-        self._init_poly()
+        self._build_poly()
         if self._poly.is_empty():
             return None
         q = C_Polyhedron(self._poly)
@@ -77,21 +77,23 @@ class LPPolyhedron:
         return r['generator']
 
     def get_generators(self):
-        self._init_poly()
+        self._build_poly()
         return self._poly.get_generators()
 
     def contains(self, other):
+        self._build_poly()
+        other._build_poly()
         return self._poly.contains(other._poly)
     
     def contains_integer_point(self):
-        self._init_poly()
+        self._build_poly()
         return self._poly.contains_integer_point()
 
     def get_integer_point(self):
         pass
 
     def get_relative_interior_point(self, dimension=None):
-        self._init_poly()
+        self._build_poly()
         if self._poly.is_empty():
             return None
         if dimension is None or dimension > self.get_dimension():
@@ -143,26 +145,26 @@ class LPPolyhedron:
         return point
 
     def minimize(self, expression):
-        self._init_poly()
+        self._build_poly()
         return self._poly.minimize(expression)
 
     def maximize(self, expression):
-        self._init_poly()
+        self._build_poly()
         return self._poly.maximize(expression)
 
     def is_empty(self):
-        self._init_poly()
+        self._build_poly()
         return self._poly.is_empty()
 
     def is_implied(self, constraint):
         pass
 
     def is_disjoint_from(self, polyhedron):
-        self._init_poly()
+        self._build_poly()
         return self._poly.is_disjoint_from(polyhedron)
 
     def __repr__(self):
-        self._init_poly()
+        self._build_poly()
         return self._poly.__repr__()
 
     def int_minimize(self, something):
@@ -179,38 +181,38 @@ class LPPolyhedron:
         pass
 
     def upper_bound_assign(self, other):
-        self._init_poly()
-        other._init_poly()
+        self._build_poly()
+        other._build_poly()
         self._poly.upper_bound_assign(other._poly)
 
     def poly_hull_assign(self, other):
-        self._init_poly()
-        other._init_poly()
+        self._build_poly()
+        other._build_poly()
         self._poly.poly_hull_assign(other._poly)
 
     def widening_assign(self, other, tp=0):
-        self._init_poly()
-        other._init_poly()
+        self._build_poly()
+        other._build_poly()
         self._poly.widening_assign(other._poly, tp)
     
     def add_dimensions(self, dim):
-        self._init_poly()
+        self._build_poly()
         self._poly.add_space_dimensions_and_embed(dim)
         self._dimension = self._poly.space_dimension()
         self._constraints = self._poly.constraints()
 
     def remove_dimensions(self, var_set):
-        self._init_poly()
+        self._build_poly()
         self._poly.remove_space_dimensions(var_set)
         self._dimension = self._poly.space_dimension()
         self._constraints = self._poly.constraints()
 
     def intersection_assign(self, other):
-        self._init_poly()
-        other._init_poly()
+        self._build_poly()
+        other._build_poly()
         self._poly.intersection_assign(other._poly)
         
     def __le__(self, other):
-        self._init_poly()
-        other._init_poly()
+        self._build_poly()
+        other._build_poly()
         return other._poly.contains(self._poly)
