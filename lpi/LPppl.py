@@ -80,6 +80,9 @@ class LPPolyhedron:
         self._init_poly()
         return self._poly.get_generators()
 
+    def contains(self, other):
+        return self._poly.contains(other._poly)
+    
     def contains_integer_point(self):
         self._init_poly()
         return self._poly.contains_integer_point()
@@ -172,5 +175,42 @@ class LPPolyhedron:
         # return self._poly.is_bounded()
         pass
 
-    def minimize_constraint_system():
+    def minimize_constraint_system(self):
         pass
+
+    def upper_bound_assign(self, other):
+        self._init_poly()
+        other._init_poly()
+        self._poly.upper_bound_assign(other._poly)
+
+    def poly_hull_assign(self, other):
+        self._init_poly()
+        other._init_poly()
+        self._poly.poly_hull_assign(other._poly)
+
+    def widening_assign(self, other, tp=0):
+        self._init_poly()
+        other._init_poly()
+        self._poly.widening_assign(other._poly, tp)
+    
+    def add_dimensions(self, dim):
+        self._init_poly()
+        self._poly.add_space_dimensions_and_embed(dim)
+        self._dimension = self._poly.space_dimension()
+        self._constraints = self._poly.constraints()
+
+    def remove_dimensions(self, var_set):
+        self._init_poly()
+        self._poly.remove_space_dimensions(var_set)
+        self._dimension = self._poly.space_dimension()
+        self._constraints = self._poly.constraints()
+
+    def intersection_assign(self, other):
+        self._init_poly()
+        other._init_poly()
+        self._poly.intersection_assign(other._poly)
+        
+    def __le__(self, other):
+        self._init_poly()
+        other._init_poly()
+        return other._poly.contains(self._poly)

@@ -78,6 +78,9 @@ class C_Polyhedron:
         """
         return self._poly.get_generators()
 
+    def contains(self, other):
+        return self._poly.constains(other)
+    
     def contains_integer_point(self):
         """Returns true if and only if *this contains at least one
         integer point.
@@ -138,3 +141,29 @@ class C_Polyhedron:
         """Returns the system of constraints, with no redundant constraint.
         """
         return self._poly.minimize_constraint_system()
+
+    def upper_bound_assign(self):
+        """
+        """
+        self._poly.upper_bound_assign()
+
+    def poly_hull_assign(self, other):
+        """
+        """
+        self._poly.poly_hull_assign(other._poly)
+
+    def widening_assign(self, other, tp=0):
+        self._poly.widening_assign(other._poly, tp)
+    
+    def add_dimensions(self, dim):
+        print("__init__.add_dimesions: ", dim)
+        self._poly.add_dimensions(dim)
+
+    def remove_dimensions(self, var_set):
+        self._poly.remove_dimensions(var_set)
+
+    def intersection_assign(self, other):
+        self._poly.intersection_assign(other._poly)
+        
+    def __le__(self, other):
+        return other._poly.contains(self._poly)

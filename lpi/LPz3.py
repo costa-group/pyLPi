@@ -72,3 +72,9 @@ class LPPolyhedron:
 
     def minimize_constraint_system():
         pass
+
+    def upper_bound_assign():
+        pass
+
+    def poly_hull_assign():
+        pass

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from setuptools import setup
+from setuptools import Distribution
 import sys
 import os
 
@@ -7,8 +8,14 @@ base = os.path.dirname(os.path.abspath(__file__))
 
 VERSION = open(os.path.join(base, 'version.txt')).read()[:-1]
 
-requires = ['pplpy', 'z3-solver']
+pkg_dir = os.path.join(base, 'lpi')
+pkg_name = 'lpi'
 
+requires = ['pplpy>=0.7', 'z3-solver']
+
+dependency_links = [
+    'git+https://github.com/videlec/pplpy.git#egg=pplpy-0.7'
+]
 
 setup(
     name='pylpi',
@@ -21,10 +28,11 @@ setup(
     download_url ='https://github.com/jesusjda/pyLPi/archive/{}.tar.gz'.format(VERSION),
     license='GPL v3',
     platforms=['any'],
-    packages=['lpi'],
-    package_dir={'lpi': os.path.join(base, 'lpi')},
-    package_data={'lpi': ['*.py']},
+    packages=[pkg_name],
+    package_dir={pkg_name: pkg_dir},
+    package_data={pkg_name: ['*.py']},
     install_requires=requires,
+    dependency_links=dependency_links,
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: C++",
@@ -39,5 +47,5 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6'
     ],
-    keywords=['linear-programming', 'ppl', 'z3', 'polyhedra'],
+    keywords=['linear-programming', 'ppl', 'z3', 'polyhedra']
 )
