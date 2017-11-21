@@ -2,7 +2,7 @@ from ppl import Variable
 from ppl import Linear_Expression
 from ppl import Constraint
 from ppl import Constraint_System
-# import z3
+import z3
 
 
 class LPPolyhedron:

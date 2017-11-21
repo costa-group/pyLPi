@@ -11,7 +11,7 @@ VERSION = open(os.path.join(base, 'version.txt')).read()[:-1]
 pkg_dir = os.path.join(base, 'lpi')
 pkg_name = 'lpi'
 
-requires = ['pplpy>=0.7']  # , 'z3-solver']
+requires = ['pplpy>=0.7', 'z3-solver']
 
 dependency_links = [
     'git+https://github.com/jesusjda/pplpy.git#egg=pplpy-0.7'
