@@ -146,10 +146,10 @@ class C_Polyhedron:
         """
         return self._poly.is_bounded()
 
-    def minimize_constraint_system(self):
+    def minimized_constraints(self):
         """Returns the system of constraints, with no redundant constraint.
         """
-        return self._poly.minimize_constraint_system()
+        return self._poly.minimized_constraints()
 
     def upper_bound_assign(self):
         """

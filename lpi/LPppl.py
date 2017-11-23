@@ -1,9 +1,9 @@
 from math import ceil
 from math import floor
-from ppl import Variable
-from ppl import Linear_Expression
-from ppl import Constraint_System
 from ppl import C_Polyhedron
+from ppl import Constraint_System
+from ppl import Linear_Expression
+from ppl import Variable
 
 
 class LPPolyhedron:
@@ -83,7 +83,7 @@ class LPPolyhedron:
         self._build_poly()
         other._build_poly()
         return self._poly.contains(other._poly)
-    
+
     def contains_integer_point(self):
         self._build_poly()
         return self._poly.contains_integer_point()
@@ -149,7 +149,8 @@ class LPPolyhedron:
 
     def maximize(self, expression):
         self._build_poly()
-        return self._poly.maximize(expression)
+        a = self._poly.maximize(expression)
+        return a
 
     def is_empty(self):
         self._build_poly()
@@ -176,8 +177,9 @@ class LPPolyhedron:
         # return self._poly.is_bounded()
         pass
 
-    def minimize_constraint_system(self):
-        pass
+    def minimized_constraints(self):
+        self._build_poly()
+        self._poly.minimized_constraints()
 
     def upper_bound_assign(self, other):
         self._build_poly()
@@ -193,7 +195,7 @@ class LPPolyhedron:
         self._build_poly()
         other._build_poly()
         self._poly.widening_assign(other._poly, tp)
-    
+
     def add_dimensions(self, dim):
         self._build_poly()
         self._poly.add_space_dimensions_and_embed(dim)
@@ -210,7 +212,7 @@ class LPPolyhedron:
         self._build_poly()
         other._build_poly()
         self._poly.intersection_assign(other._poly)
-        
+
     def __le__(self, other):
         self._build_poly()
         other._build_poly()
