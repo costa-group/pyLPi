@@ -20,9 +20,9 @@ class C_Polyhedron:
         """Builds a C polyhedron from a system of constraints.
 
         :param cons: Constraint system
-        :type cons: ppl.Constraint_System 
-	    :param dim: dimension of the `universe`, optional.
-	    Defaults Constraint System dimension.
+        :type cons: ppl.Constraint_System
+        :param dim: dimension of the `universe`, optional.
+        Defaults Constraint System dimension.
         :type dim: int
         """
         if lplib is None:
@@ -32,7 +32,7 @@ class C_Polyhedron:
             self._poly = lpi.LPppl.LPPolyhedron(cons, dim)
         elif self._lib == "z3":
             self._poly = lpi.LPz3.LPPolyhedron(cons, dim)
-            
+
     def _assert_same_lib(self, other):
         """Checks if ```other``` use the same lib as ```self```
         Raises an Exception if not
@@ -89,7 +89,7 @@ class C_Polyhedron:
 
     def contains(self, other):
         return self._poly.constains(other)
-    
+
     def contains_integer_point(self):
         """Returns true if and only if *this contains at least one
         integer point.
@@ -165,7 +165,7 @@ class C_Polyhedron:
     def widening_assign(self, other, tp=0):
         self._assert_same_lib(other)
         self._poly.widening_assign(other._poly, tp)
-    
+
     def add_dimensions(self, dim):
         self._poly.add_dimensions(dim)
 
@@ -175,7 +175,7 @@ class C_Polyhedron:
     def intersection_assign(self, other):
         self._assert_same_lib(other)
         self._poly.intersection_assign(other._poly)
-        
+
     def __le__(self, other):
         self._assert_same_lib(other)
         return self._poly <= other._poly
