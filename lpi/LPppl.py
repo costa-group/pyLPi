@@ -91,15 +91,17 @@ class LPPolyhedron:
     def get_integer_point(self):
         pass
 
-    def get_relative_interior_point(self, dimension=None):
+    def get_relative_interior_point(self, dimension=None, free_constants=[]):
         self._build_poly()
         if self._poly.is_empty():
             return None
         if dimension is None or dimension > self.get_dimension():
             dimension = self.get_dimension()
         q = C_Polyhedron(self._poly)
-        point = [0]
-        for i in range(1, dimension):
+        point = [0 for _ in range(dimension)]
+        for i in range(dimension):
+            if i in free_constants:
+                continue
             ci = None
             li = Variable(i)
             exp_li = Linear_Expression(li)
@@ -133,14 +135,20 @@ class LPPolyhedron:
                     else:  # no integers in (a, b)
                         ci = mid
 
-            point.append(ci)
+            point[i] = ci
             q.add_constraint(li == ci)
 
-        l0 = Variable(0)
-        exp_l0 = Linear_Expression(l0)
-        r = q.minimize(exp_l0)
-        c0 = r['generator'].coefficient(l0)
-        point[0] = c0
+        for i in free_constants:
+            if i > dimension:
+                continue
+            li = Variable(i)
+            exp_li = Linear_Expression(li)
+            r = q.minimize(exp_li)
+            ci = 0
+            if r['bounded']:
+                ci = r['generator'].coefficient(li)
+            q.add_constraint(li == ci)
+            point[i] = ci
         return point
 
     def minimize(self, expression):
