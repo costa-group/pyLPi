@@ -102,6 +102,8 @@ class LPPolyhedron:
         for i in range(dimension):
             if i in free_constants:
                 continue
+            if q.is_empty():
+                return None
             ci = None
             li = Variable(i)
             exp_li = Linear_Expression(li)
@@ -141,6 +143,8 @@ class LPPolyhedron:
         for i in free_constants:
             if i > dimension:
                 continue
+            if q.is_empty():
+                return None
             li = Variable(i)
             exp_li = Linear_Expression(li)
             r = q.minimize(exp_li)
