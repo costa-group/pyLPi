@@ -1,9 +1,8 @@
-from math import ceil
-from math import floor
 from ppl import C_Polyhedron
 from ppl import Constraint_System
 from ppl import Linear_Expression
 from ppl import Variable
+from ppl import point
 
 
 class LPPolyhedron:
@@ -91,69 +90,75 @@ class LPPolyhedron:
     def get_integer_point(self):
         pass
 
-    def get_relative_interior_point(self, dimension=None, free_constants=[]):
+    def get_relative_interior_point(self, variables=None):
         self._build_poly()
         if self._poly.is_empty():
             return None
-        if dimension is None or dimension > self.get_dimension():
-            dimension = self.get_dimension()
+        dimension = self.get_dimension()
+        if variables is None:
+            variables = [i for i in range(dimension)]
+        for v in variables:
+            if v < 0 or v >= dimension:
+                raise Exception("Wrong dimension")
         q = C_Polyhedron(self._poly)
-        point = [0 for _ in range(dimension)]
-        for i in range(dimension):
-            if i in free_constants:
-                continue
-            if q.is_empty():
-                return None
-            ci = None
+
+        from functools import reduce
+        from fractions import Fraction
+        from fractions import gcd
+        from math import ceil
+        from math import floor
+
+        coeffs = [Fraction(0, 1) for _ in range(dimension)]
+        for i in variables:
             li = Variable(i)
             exp_li = Linear_Expression(li)
             # minimize li with respect q
-            ra = q.minimize(exp_li)
+            left = q.minimize(exp_li)
             # maximize li with respect q
-            rb = q.maximize(exp_li)
-            if not ra['bounded'] and not rb['bounded']:
-                ci = 0
-            elif not ra['bounded']:
-                b = rb['generator'].coefficient(li)
-                ci = 0 if (b > 0) else ceil(b - 1.0)
-            elif not rb['bounded']:
-                a = ra['generator'].coefficient(li)
-                ci = 0 if (a < 0) else floor(a + 1.0)
-            else:
-                a = ra['generator'].coefficient(li)
-                b = rb['generator'].coefficient(li)
-                if a == b:
-                    ci = a
-                elif a < 0 and b > 0:
-                    ci = 0
+            right = q.maximize(exp_li)
+            if not left['bounded'] and not right['bounded']:
+                ci = Fraction(0, 1)
+            elif not left['bounded']:
+                lim_r = right['sup_n'] / (1.0*right['sup_d'])
+                if lim_r >= 0:
+                    ci = Fraction(0, 1)
                 else:
-                    mid = (b-a) / 2.0 + a
+                    ci = Fraction(ceil(lim_r - 1.0), 1)
+            elif not right['bounded']:
+                lim_l = left['inf_n'] / (1.0*left['inf_d'])
+                if lim_l <= 0:
+                    ci = Fraction(0, 1)
+                else:
+                    ci = Fraction(floor(lim_l + 1.0), 1)
+            else:
+                lim_r = Fraction(right['sup_n'], right['sup_d'])
+                lim_l = Fraction(left['inf_n'], left['inf_d'])
+                if lim_r == lim_l:
+                    ci = lim_r
+                elif lim_l < 0 and lim_r > 0:
+                    ci = Fraction(0, 1)
+                else:
+                    mid = (lim_r-lim_l) / 2 + lim_l
                     aux1 = ceil(mid)
                     aux2 = floor(mid)
-                    if aux1 < b:  # aux1 is in (a, b) ??
-                        ci = aux1
-                    elif a < aux2:  # aux2 is in (a, b) ??
-                        ci = aux2
+                    if aux1 < lim_r:  # aux1 is in (a, b) ??
+                        ci = Fraction(aux1, 1)
+                    elif lim_l < aux2:  # aux2 is in (a, b) ??
+                        ci = Fraction(aux2, 1)
                     else:  # no integers in (a, b)
                         ci = mid
 
-            point[i] = ci
-            q.add_constraint(li == ci)
+            coeffs[i] = ci
+            q.add_constraint(li*ci.denominator == ci.numerator)
 
-        for i in free_constants:
-            if i > dimension:
-                continue
-            if q.is_empty():
-                return None
-            li = Variable(i)
-            exp_li = Linear_Expression(li)
-            r = q.minimize(exp_li)
-            ci = 0
-            if r['bounded']:
-                ci = r['generator'].coefficient(li)
-            q.add_constraint(li == ci)
-            point[i] = ci
-        return point
+        # build POINT
+        exp = Linear_Expression(0)
+        divisor = reduce(gcd, [f.denominator for f in coeffs])
+        for v in variables:
+            ci = coeffs[v].numerator * (divisor / coeffs[v].denominator)
+            exp += Variable(v) * ci
+
+        return point(exp, divisor)
 
     def minimize(self, expression):
         self._build_poly()

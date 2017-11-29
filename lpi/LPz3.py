@@ -1,7 +1,7 @@
-from ppl import Variable
-from ppl import Linear_Expression
 from ppl import Constraint
 from ppl import Constraint_System
+from ppl import Linear_Expression
+from ppl import Variable
 import z3
 
 
@@ -40,7 +40,7 @@ class LPPolyhedron:
     def get_integer_point(self):
         pass
 
-    def get_relative_interior_point():
+    def get_relative_interior_point(self, variables):
         pass
 
     def minimize(self):
@@ -70,11 +70,11 @@ class LPPolyhedron:
     def is_bounded(self):
         pass
 
-    def minimize_constraint_system():
+    def minimize_constraint_system(self):
         pass
 
-    def upper_bound_assign():
+    def upper_bound_assign(self):
         pass
 
-    def poly_hull_assign():
+    def poly_hull_assign(self):
         pass
