@@ -1,5 +1,5 @@
 
-from .LPppl import Lazy_Polyhedron
+from .Lazy_Polyhedron import C_Polyhedron
 
 
 __all__ = ["C_Polyhedron"]
