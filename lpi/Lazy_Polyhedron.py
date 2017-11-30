@@ -12,7 +12,7 @@ class C_Polyhedron:
     _constraints = None
     _dimension = 0
 
-    def __init__(self, constraint_system, dim=-1):
+    def __init__(self, constraint_system=None, dim=-1):
         if constraint_system is None:
             constraint_system = Constraint_System()
         cdim = constraint_system.space_dimension()
