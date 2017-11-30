@@ -8,12 +8,5 @@ class TestKey(unittest.TestCase):
         self.assertEqual(1, 1)
 
     def test_ppl(self):
-        lpi.C_Polyhedron(lplib="ppl")
-        self.assertEqual(1, 1)
-
-    def test_z3(self):
-        try:
-            lpi.C_Polyhedron(lplib="z3")
-        except NotImplementedError as e:
-            self.skipTest("z3 is not implemented")
+        lpi.C_Polyhedron(None,dim=2)
         self.assertEqual(1, 1)

@@ -1,11 +1,11 @@
-from ppl import C_Polyhedron
+from ppl import C_Polyhedron as PPL_C_Polyhedron
 from ppl import Constraint_System
 from ppl import Linear_Expression
 from ppl import Variable
 from ppl import point
 
 
-class LPPolyhedron:
+class C_Polyhedron:
 
     _existsPoly = False
     _poly = None
@@ -26,7 +26,7 @@ class LPPolyhedron:
     def _build_poly(self):
         if self._poly is None:
             self._existsPoly = True
-            self._poly = C_Polyhedron(self._dimension)
+            self._poly = PPL_C_Polyhedron(self._dimension)
             self._poly.add_constraints(self._constraints)
 
     def add_constraint(self, constraint):
@@ -59,7 +59,7 @@ class LPPolyhedron:
         self._build_poly()
         if self._poly.is_empty():
             return None
-        q = C_Polyhedron(self._poly)
+        q = PPL_C_Polyhedron(self._poly)
         x = Variable(0)
         e = Linear_Expression(x)
         q.add_constraint(x >= 0)
@@ -68,7 +68,7 @@ class LPPolyhedron:
         if r['bounded']:
             return r['generator']
 
-        q = C_Polyhedron(self._poly)
+        q = PPL_C_Polyhedron(self._poly)
         q.add_constraint(x <= 0)
         r = q.maximize(e)
 
@@ -100,7 +100,7 @@ class LPPolyhedron:
         for v in variables:
             if v < 0 or v >= dimension:
                 raise Exception("Wrong dimension")
-        q = C_Polyhedron(self._poly)
+        q = PPL_C_Polyhedron(self._poly)
 
         from functools import reduce
         from fractions import Fraction

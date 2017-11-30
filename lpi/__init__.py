@@ -1,8 +1,11 @@
-import lpi.LPppl
-import lpi.LPz3
+
+from .LPppl import Lazy_Polyhedron
 
 
-class C_Polyhedron:
+__all__ = ["C_Polyhedron"]
+
+
+class CA_Polyhedron:
     """A closed convex polyhedron.
     From a system of constraints.
 
@@ -25,13 +28,6 @@ class C_Polyhedron:
         Defaults Constraint System dimension.
         :type dim: int
         """
-        if lplib is None:
-            lplib = "ppl"  # get_LP_lib_name()
-        self._lib = lplib
-        if self._lib == "ppl":
-            self._poly = lpi.LPppl.LPPolyhedron(cons, dim)
-        elif self._lib == "z3":
-            self._poly = lpi.LPz3.LPPolyhedron(cons, dim)
 
     def _assert_same_lib(self, other):
         """Checks if ```other``` use the same lib as ```self```
