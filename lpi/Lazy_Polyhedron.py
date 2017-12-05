@@ -1,8 +1,33 @@
+from fractions import gcd
+from functools import reduce
 from ppl import C_Polyhedron as PPL_C_Polyhedron
+from ppl import Constraint
 from ppl import Constraint_System
 from ppl import Linear_Expression
 from ppl import Variable
 from ppl import point
+from z3 import Real
+from z3 import Solver
+from z3 import sat
+
+
+def _constraints_to_z3(cons):
+    if isinstance(cons, (Constraint_System, list)):
+        cs = []
+        for c in cons:
+            cs.append(_constraints_to_z3(c))
+        return cs
+    elif isinstance(cons, Constraint):
+        equation = cons.inhomogeneous_term()
+        dim = cons.space_dimension()
+        for i in range(dim):
+            equation += cons.coefficient(Variable(i)) * Real(str(i))
+        if cons.is_equality():
+            return equation == 0
+        else:
+            return equation >= 0
+    else:
+        raise ValueError("This method only allows PPL constraints")
 
 
 class C_Polyhedron:
@@ -56,6 +81,28 @@ class C_Polyhedron:
         return self._poly.constraints()
 
     def get_point(self):
+        if self._dimension >= 4:
+            z3cons = _constraints_to_z3(self._constraints)
+            s = Solver()
+            for c in z3cons:
+                s.insert(c)
+            if s.check() == sat:
+                # build POINT
+                coeffs = s.model()
+                exp = Linear_Expression(0)
+                divisor = reduce(gcd, [int(str(coeffs[f].denominator()))
+                                       for f in coeffs])
+                for i in range(self._dimension):
+                    if coeffs[Real(str(i))] is None:
+                        exp += Variable(i) * 0
+                    else:
+                        v = Real(str(i))
+                        ci = int(str(coeffs[v].numerator()))
+                        ci *= (divisor / int(str(coeffs[v].denominator())))
+                        exp += Variable(i) * ci
+                return point(exp, divisor)
+            else:
+                return None
         self._build_poly()
         if self._poly.is_empty():
             return None
@@ -102,9 +149,7 @@ class C_Polyhedron:
                 raise Exception("Wrong dimension")
         q = PPL_C_Polyhedron(self._poly)
 
-        from functools import reduce
         from fractions import Fraction
-        from fractions import gcd
         from math import ceil
         from math import floor
 
