@@ -9,6 +9,7 @@ from ppl import point
 from z3 import Real
 from z3 import Solver
 from z3 import sat
+from termination.output import Output_Manager as OM
 
 
 def _constraints_to_z3(cons):
@@ -89,9 +90,11 @@ class C_Polyhedron:
             if s.check() == sat:
                 # build POINT
                 coeffs = s.model()
+                OM.printif(2, "z3 output:", coeffs)
                 exp = Linear_Expression(0)
                 divisor = reduce(gcd, [int(str(coeffs[f].denominator()))
                                        for f in coeffs])
+                OM.printif(2, "divisor = ", divisor)
                 for i in range(self._dimension):
                     if coeffs[Real(str(i))] is None:
                         exp += Variable(i) * 0
@@ -100,6 +103,7 @@ class C_Polyhedron:
                         ci = int(str(coeffs[v].numerator()))
                         ci *= (divisor / int(str(coeffs[v].denominator())))
                         exp += Variable(i) * ci
+                OM.printif(2, "expr:", exp)
                 return point(exp, divisor)
             else:
                 return None
