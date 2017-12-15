@@ -10,8 +10,6 @@ from z3 import Real
 from z3 import Solver
 from z3 import sat
 
-# Least common multiple is not in standard libraries? It's in gmpy, but this is simple enough:
-
 def _lcm(numbers):
     """Return lowest common multiple."""    
     def lcm(a, b):
