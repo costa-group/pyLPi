@@ -85,8 +85,8 @@ class C_Polyhedron:
         self._build_poly()
         return self._poly.constraints()
 
-    def get_point(self):
-        if self._dimension >= 20:
+    def get_point(self, use_z3=False):
+        if use_z3:
             z3cons = _constraints_to_z3(self._constraints)
             s = Solver()
             for c in z3cons:
