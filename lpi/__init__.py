@@ -68,10 +68,10 @@ class CA_Polyhedron:
         """
         return self._poly.get_dimension()
 
-    def get_constraints(self):
+    def get_constraints(self, use_z3=False):
         """Returns the system of constraints.
         """
-        return self._poly.get_constraints()
+        return self._poly.get_constraints(use_z3=use_z3)
 
     def get_point(self):
         """Returns a random interior point.

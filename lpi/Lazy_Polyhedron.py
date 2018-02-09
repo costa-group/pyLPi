@@ -81,9 +81,13 @@ class C_Polyhedron:
         self._build_poly()
         return self._poly.space_dimension()
 
-    def get_constraints(self):
+    def get_constraints(self, use_z3=False):
         self._build_poly()
-        return self._poly.constraints()
+        cons = self._poly.constraints()
+        if use_z3:
+            return _constraints_to_z3(cons)
+        else:
+            return cons
 
     def get_point(self, use_z3=False):
         if use_z3:
