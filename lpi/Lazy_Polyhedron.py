@@ -98,11 +98,11 @@ class C_Polyhedron:
             if s.check() == sat:
                 # build POINT
                 coeffs = s.model()
-                # print("z3 output:", coeffs)
+
                 exp = Linear_Expression(0)
                 divisor = _lcm([int(str(coeffs[f].denominator()))
                                 for f in coeffs])
-                # print("divisor = ", divisor)
+
                 for i in range(self._dimension):
                     if coeffs[Real(str(i))] is None:
                         exp += Variable(i) * 0
@@ -111,7 +111,7 @@ class C_Polyhedron:
                         ci = int(str(coeffs[v].numerator()))
                         ci *= (divisor / int(str(coeffs[v].denominator())))
                         exp += Variable(i) * ci
-                # print("expr:", exp)
+
                 return point(exp, divisor)
             else:
                 return None
@@ -223,8 +223,7 @@ class C_Polyhedron:
 
     def maximize(self, expression):
         self._build_poly()
-        a = self._poly.maximize(expression)
-        return a
+        return self._poly.maximize(expression)
 
     def is_empty(self):
         self._build_poly()
@@ -254,21 +253,25 @@ class C_Polyhedron:
     def minimized_constraints(self):
         self._build_poly()
         self._poly.minimized_constraints()
+        self._constraints = self._poly.constraints()
 
     def upper_bound_assign(self, other):
         self._build_poly()
         other._build_poly()
         self._poly.upper_bound_assign(other._poly)
+        self._constraints = self._poly.constraints()
 
     def poly_hull_assign(self, other):
         self._build_poly()
         other._build_poly()
         self._poly.poly_hull_assign(other._poly)
+        self._constraints = self._poly.constraints()
 
     def widening_assign(self, other, tp=0):
         self._build_poly()
         other._build_poly()
         self._poly.widening_assign(other._poly, tp)
+        self._constraints = self._poly.constraints()
 
     def add_dimensions(self, dim):
         self._build_poly()
@@ -286,8 +289,52 @@ class C_Polyhedron:
         self._build_poly()
         other._build_poly()
         self._poly.intersection_assign(other._poly)
+        self._constraints = self._poly.constraints()
 
     def __le__(self, other):
         self._build_poly()
         other._build_poly()
         return other._poly.contains(self._poly)
+
+    def toString(self, vars_name=None, eq_symb="==", geq_symb=">="):
+        cs = self._constraints
+        dim = self._dimension
+        if vars_name is None:
+            vars_name = []
+        for i in range(len(vars_name), dim):
+            vars_name.append("x"+str(i))
+        cs_str = []
+        for c in cs:
+            local_dim = c.space_dimension()
+            first = True
+            c_str = ""
+            for v in range(local_dim):
+                coeff = c.coefficient(Variable(v))
+                if not first:
+                    if coeff > 0:
+                        c_str += " + "
+                if coeff != 0:
+                    first = False
+                    if coeff < 0:
+                        c_str += " - "
+                        coeff = - coeff
+                    if coeff != 1: 
+                        c_str += str(coeff)
+                        c_str += " * "
+                    c_str += vars_name[v]
+            coeff = c.inhomogeneous_term()
+            if first or coeff != 0:
+                if not first:
+                    if coeff >= 0:
+                        c_str += " + "
+                if coeff < 0:
+                    c_str += " - "
+                    coeff = - coeff
+                c_str += str(coeff)
+            if c.is_inequality():
+                c_str += " {} ".format(geq_symb)
+            else:
+                c_str += " {} ".format(eq_symb)
+            c_str += "0"
+            cs_str.append(c_str)
+        return cs_str

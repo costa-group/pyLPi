@@ -175,3 +175,6 @@ class CA_Polyhedron:
     def __le__(self, other):
         self._assert_same_lib(other)
         return self._poly <= other._poly
+
+    def toString(self, vars_name=None, eq_symb="==", geq_symb=">="):
+        return self._poly.toString(self, vars_name=vars_name, eq_symb=eq_symb, geq_symb=geq_symb)
