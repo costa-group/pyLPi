@@ -162,6 +162,10 @@ class CA_Polyhedron:
         self._assert_same_lib(other)
         self._poly.widening_assign(other._poly, tp)
 
+    def extrapolation_assign(self, other, cs, tp=0, limited=False):
+        self._assert_same_lib(other)
+        self._poly.extrapolation_assign(other._poly, cs, tp, limited)
+
     def add_dimensions(self, dim):
         self._poly.add_dimensions(dim)
 

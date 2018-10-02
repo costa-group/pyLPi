@@ -6,9 +6,7 @@ from ppl import Constraint_System
 from ppl import Linear_Expression
 from ppl import Variable
 from ppl import point
-from z3 import Real
-from z3 import Solver
-from z3 import sat
+
 
 def _lcm(numbers):
     """Return lowest common multiple."""    
@@ -17,6 +15,7 @@ def _lcm(numbers):
     return reduce(lcm, numbers, 1)
 
 def _constraints_to_z3(cons):
+    from z3 import Real
     if isinstance(cons, (Constraint_System, list)):
         cs = []
         for c in cons:
@@ -91,6 +90,9 @@ class C_Polyhedron:
 
     def get_point(self, use_z3=False):
         if use_z3:
+            from z3 import Real
+            from z3 import Solver
+            from z3 import sat
             z3cons = _constraints_to_z3(self._constraints)
             s = Solver()
             for c in z3cons:
@@ -271,6 +273,17 @@ class C_Polyhedron:
         self._build_poly()
         other._build_poly()
         self._poly.widening_assign(other._poly, tp)
+        self._constraints = self._poly.constraints()
+
+    def extrapolation_assign(self, other, cs, tp=0, limited=False):
+        self._build_poly()
+        other._build_poly()
+        if not isinstance(cs, (Constraint_System)):
+            raise ValueError("cs argument must be a Constraint System")
+        if limited:
+            self._poly.limited_H79_extrapolation_assign(other._poly, cs, tp)
+        else:
+            self._poly.bounded_H79_extrapolation_assign(other._poly, cs, tp)
         self._constraints = self._poly.constraints()
 
     def add_dimensions(self, dim):
