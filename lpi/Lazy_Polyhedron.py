@@ -25,7 +25,9 @@ def _constraints_to_z3(cons):
         equation = cons.inhomogeneous_term()
         dim = cons.space_dimension()
         for i in range(dim):
-            equation += cons.coefficient(Variable(i)) * Real(str(i))
+            cf = cons.coefficient(Variable(i))
+            if cf != 0:
+                equation += cf * Real(str(i))
         if cons.is_equality():
             return equation == 0
         else:
