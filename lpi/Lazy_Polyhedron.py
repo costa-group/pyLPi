@@ -299,11 +299,22 @@ class C_Polyhedron:
         self._poly.remove_space_dimensions(var_set)
         self._dimension = self._poly.space_dimension()
         self._constraints = self._poly.constraints()
+        
+    def expand_space_dimension(self, var, m):
+        self._build_poly()
+        self._poly.expand_space_dimension(var, m)
+        self._dimension = self._poly.space_dimension()
+        self._constraints = self._poly.constraints()
 
     def intersection_assign(self, other):
         self._build_poly()
         other._build_poly()
         self._poly.intersection_assign(other._poly)
+        self._constraints = self._poly.constraints()
+
+    def unconstraint(self, var):
+        self._build_poly()
+        self._poly.unconstrain(var)
         self._constraints = self._poly.constraints()
 
     def __le__(self, other):

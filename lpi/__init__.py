@@ -176,6 +176,12 @@ class CA_Polyhedron:
         self._assert_same_lib(other)
         self._poly.intersection_assign(other._poly)
 
+    def expand_space_dimension(self, var, m):
+        self._poly.expand_space_dimension(var, m)
+
+    def unconstraint(self, var):
+        self._poly.unconstraint(var)
+
     def __le__(self, other):
         self._assert_same_lib(other)
         return self._poly <= other._poly
