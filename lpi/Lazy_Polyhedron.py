@@ -258,6 +258,15 @@ class C_Polyhedron:
         self._build_poly()
         self._poly.minimized_constraints()
         self._constraints = self._poly.constraints()
+    
+    def is_sat(self):
+        from z3 import Solver
+        from z3 import sat
+        z3cons = _constraints_to_z3(self._constraints)
+        s = Solver()
+        for c in z3cons:
+            s.insert(c)
+        return s.check() == sat
 
     def upper_bound_assign(self, other):
         self._build_poly()

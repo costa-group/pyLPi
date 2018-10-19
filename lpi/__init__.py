@@ -152,6 +152,9 @@ class CA_Polyhedron:
         """
         self._poly.upper_bound_assign()
 
+    def is_sat(self):
+        return self._poly.is_sat()
+
     def poly_hull_assign(self, other):
         """
         """
