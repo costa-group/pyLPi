@@ -139,7 +139,7 @@ class C_Polyhedron:
 
     def get_generators(self):
         self._build_poly()
-        return self._poly.get_generators()
+        return self._poly.generators()
 
     def contains(self, other):
         self._build_poly()
