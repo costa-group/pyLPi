@@ -308,6 +308,39 @@ class C_Polyhedron:
         self._poly.remove_space_dimensions(var_set)
         self._dimension = self._poly.space_dimension()
         self._constraints = self._poly.constraints()
+
+    def project(self, var_set):
+        if not isinstance(var_set,(Variable, list, int)):
+            raise ValueError("Project into a variable or a list of variables. Argument Incorrect")
+        vs = []
+        if isinstance(var_set, list):
+            for v in var_set:
+                n = v
+                if isinstance(v, Variable):
+                    n = v.id()    
+                if n < 0 or n >= self._dimension:
+                    raise ValueError("Polyhedron can NOT be projected to var {}, the dimension is {}.".format(n, self._dimension))
+                vs.append(n)
+        else:
+            n = var_set
+            if isinstance(var_set, Variable):
+                n = var_set.id()
+            if var_set < 0 or var_set >= self._dimension:
+                    raise ValueError("Polyhedron can NOT be projected to var {}, the dimension is {}.".format(var_set, self._dimension))
+            vs.append(n)
+        from ppl import Variables_Set
+        vs_set = Variables_Set()
+        do_it = False
+        for i in range(self._dimension):
+            if i not in vs:
+                do_it = True
+                vs_set.insert(Variable(i))
+        from copy import deepcopy
+        ppoly = deepcopy(self)
+        if do_it:
+            ppoly.remove_dimensions(vs_set)
+        return ppoly
+        
         
     def expand_space_dimension(self, var, m):
         self._build_poly()
@@ -326,10 +359,22 @@ class C_Polyhedron:
         self._poly.unconstrain(var)
         self._constraints = self._poly.constraints()
 
+    def __ge__(self, other):
+        self._build_poly()
+        other._build_poly()
+        return self._poly.contains(other._poly)
+    
     def __le__(self, other):
         self._build_poly()
         other._build_poly()
         return other._poly.contains(self._poly)
+
+    def __eq__(self, other):
+        if self.get_dimension() != other.get_dimension():
+            return False
+        self._build_poly()
+        other._build_poly()
+        return other._poly.contains(self._poly) and self._poly.contains(other._poly)
 
     def toString(self, vars_name=None, eq_symb="==", geq_symb=">="):
         cs = self._constraints
