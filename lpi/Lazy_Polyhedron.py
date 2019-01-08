@@ -9,10 +9,11 @@ from ppl import point
 
 
 def _lcm(numbers):
-    """Return lowest common multiple."""    
+    """Return lowest common multiple."""
     def lcm(a, b):
         return (a * b) // gcd(a, b)
     return reduce(lcm, numbers, 1)
+
 
 def _constraints_to_z3(cons):
     from z3 import Real
@@ -310,14 +311,14 @@ class C_Polyhedron:
         self._constraints = self._poly.constraints()
 
     def project(self, var_set):
-        if not isinstance(var_set,(Variable, list, int)):
+        if not isinstance(var_set, (Variable, list, int)):
             raise ValueError("Project into a variable or a list of variables. Argument Incorrect")
         vs = []
         if isinstance(var_set, list):
             for v in var_set:
                 n = v
                 if isinstance(v, Variable):
-                    n = v.id()    
+                    n = v.id()
                 if n < 0 or n >= self._dimension:
                     raise ValueError("Polyhedron can NOT be projected to var {}, the dimension is {}.".format(n, self._dimension))
                 vs.append(n)

@@ -1,8 +1,9 @@
-
 from .Lazy_Polyhedron import C_Polyhedron
+from .Constraints import Constraint
+from .Expressions import Expression
+from .Expressions import ExprTerm
 
-
-__all__ = ["C_Polyhedron"]
+__all__ = ["C_Polyhedron", "Constraint", "Expression", "ExprTerm"]
 
 
 class CA_Polyhedron:
