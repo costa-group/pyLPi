@@ -148,8 +148,8 @@ class Constraint(BoolExpression):
             raise ValueError("degree > 1")
         return exp
 
-    def get(self, toVar, toNum, toExp):
-        left = self._exp.get(toVar, toNum, toExp)
+    def get(self, toVar, toNum, toExp=lambda x: x, ignore_zero=False):
+        left = self._exp.get(toVar, toNum, toExp, ignore_zero=ignore_zero)
         if isinstance(left, toNum):
             left = toExp(left)
         zero = toExp(toNum(0))
@@ -163,34 +163,6 @@ class Constraint(BoolExpression):
             return (left <= toExp(toNum(-1)))
         elif self._op == opCMP.LEQ:
             return (left <= zero)
-
-    def transform(self, variables, lib):
-        """
-        variables: list of variables (including prime and local variables)
-        lib: "z3" or "ppl"
-        """
-        if lib == "ppl":
-            from ppl import Linear_Expression
-            from ppl import Variable
-
-            def toVar(v):
-                if v in variables:
-                    return Variable(variables.index(v))
-                else:
-                    raise ValueError("{} is not a variable.".format(v))
-
-            return self.get(toVar, int, Linear_Expression)
-        elif lib == "z3":
-            from z3 import Real
-
-            def toVar(v):
-                if v in variables:
-                    return Real(v)
-                else:
-                    raise ValueError("{} is not a variable.".format(v))
-            return self.get(toVar, int)
-        else:
-            raise ValueError("lib ({}) not supported".format(lib))
 
     def toString(self, toVar, toNum, eq_symb="==", leq_symb="<=", geq_symb=">=", lt_symb="<", gt_symb=">", neq_symb="!="):
         op = self._op.toString(eq_symb=eq_symb, leq_symb=leq_symb, geq_symb=geq_symb, lt_symb=lt_symb, gt_symb=gt_symb, neq_symb=neq_symb)
