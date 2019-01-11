@@ -1,4 +1,4 @@
-from lpi.Solvers import SolverInterface
+from lpi.solvers import SolverInterface
 from z3 import Solver
 from z3 import Real
 from z3 import sat
@@ -7,6 +7,7 @@ from lpi.utils import lcm
 
 
 class z3Solver(SolverInterface):
+    # TODO: Define lib
     """
     >>> z3Solver()
     Traceback (most recent call last):
@@ -31,8 +32,8 @@ class z3Solver(SolverInterface):
 
     @staticmethod
     def _convert_into_polyhedron(solver, vars_):
-        from lpi.Expressions import ExprTerm
-        from lpi.Polyhedron import Polyhedron
+        from lpi import ExprTerm
+        from lpi import C_Polyhedron
 
         def parse_cons_tree(tree):
             if tree.num_args() == 0:
@@ -59,18 +60,18 @@ class z3Solver(SolverInterface):
                     raise ValueError("Not a valid operator ({})".format(op))
 
         cons = [parse_cons_tree(simplify(c)) for c in solver.assertions()]
-        return Polyhedron(constraints=cons, variables=vars_)
+        return C_Polyhedron(constraints=cons, variables=vars_)
 
     @staticmethod
     def get_point(polyhedron):
         """
-        >>> from lpi.Polyhedron import Polyhedron
-        >>> from lpi.Expressions import ExprTerm
-        >>> from lpi.Solvers.z3Solver import z3Solver
+        >>> from lpi import C_Polyhedron
+        >>> from lpi import ExprTerm
+        >>> from lpi.solvers import solver_factory
         >>> exp = 5 * ExprTerm('x')
         >>> y = ExprTerm('y')
-        >>> p = Polyhedron([exp < y, exp <= y, exp + y > 3, y > 2], ['x', 'y'])
-        >>> z3Solver.get_point(p)
+        >>> p = C_Polyhedron([exp < y, exp <= y, exp + y > 3, y > 2], ['x', 'y'])
+        >>> solver_factory('z3').get_point(p)
         ([0.0, 4.0], 1)
         """
         cons, vars_, __ = z3Solver._transform_polyhedron(polyhedron)
@@ -98,13 +99,13 @@ class z3Solver(SolverInterface):
     @staticmethod
     def is_sat(polyhedron):
         """
-        >>> from lpi.Polyhedron import Polyhedron
-        >>> from lpi.Expressions import ExprTerm
-        >>> from lpi.Solvers.z3Solver import z3Solver
+        >>> from lpi import C_Polyhedron
+        >>> from lpi import ExprTerm
+        >>> from lpi.solvers import solver_factory
         >>> exp = 5 * ExprTerm('x')
         >>> y = ExprTerm('y')
-        >>> p = Polyhedron([exp < y, exp <= y, exp + y > 3, y > 2], ['x', 'y'])
-        >>> z3Solver.is_sat(p)
+        >>> p = C_Polyhedron([exp < y, exp <= y, exp + y > 3, y > 2], ['x', 'y'])
+        >>> solver_factory('z3').is_sat(p)
         True
         """
         cons, __, __ = z3Solver._transform_polyhedron(polyhedron)
@@ -115,6 +116,4 @@ class z3Solver(SolverInterface):
 
 if __name__ == "__main__":
     import doctest
-    f, __ = doctest.testmod()
-    if f == 0:
-        print("All tests passed.")
+    doctest.testmod(verbose=True)

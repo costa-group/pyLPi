@@ -1,7 +1,7 @@
 from enum import Enum
-from .Expressions import Expression
-from .Expressions import ExprTerm
-from .Expressions import opExp
+from lpi.expressions import Expression
+from lpi.expressions import ExprTerm
+from lpi.expressions import opExp
 
 
 class BoolExpression(object):

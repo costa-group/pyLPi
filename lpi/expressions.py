@@ -268,8 +268,8 @@ class Expression(object):
             right = ExprTerm(other)
         elif not isinstance(other, (ExprTerm, Expression)):
             raise NotImplementedError()
-        from .Constraints import opCMP
-        from .Constraints import Constraint
+        from lpi.constraints import opCMP
+        from lpi.constraints import Constraint
         return Constraint(self, opCMP.LT, right)
 
     def __le__(self, other):
@@ -278,8 +278,8 @@ class Expression(object):
             right = ExprTerm(other)
         elif not isinstance(other, (ExprTerm, Expression)):
             raise NotImplementedError()
-        from .Constraints import opCMP
-        from .Constraints import Constraint
+        from lpi.constraints import opCMP
+        from lpi.constraints import Constraint
         return Constraint(self, opCMP.LEQ, right)
 
     def __eq__(self, other):
@@ -288,8 +288,8 @@ class Expression(object):
             right = ExprTerm(other)
         elif not isinstance(other, (ExprTerm, Expression)):
             raise NotImplementedError()
-        from .Constraints import opCMP
-        from .Constraints import Constraint
+        from lpi.constraints import opCMP
+        from lpi.constraints import Constraint
         return Constraint(self, opCMP.EQ, right)
 
     def __gt__(self, other):
@@ -298,8 +298,8 @@ class Expression(object):
             right = ExprTerm(other)
         elif not isinstance(other, (ExprTerm, Expression)):
             raise NotImplementedError()
-        from .Constraints import opCMP
-        from .Constraints import Constraint
+        from lpi.constraints import opCMP
+        from lpi.constraints import Constraint
         return Constraint(self, opCMP.GT, right)
 
     def __ge__(self, other):
@@ -308,8 +308,8 @@ class Expression(object):
             right = ExprTerm(other)
         elif not isinstance(other, (ExprTerm, Expression)):
             raise NotImplementedError()
-        from .Constraints import opCMP
-        from .Constraints import Constraint
+        from lpi.constraints import opCMP
+        from lpi.constraints import Constraint
         return Constraint(self, opCMP.GEQ, right)
 
 

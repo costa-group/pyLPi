@@ -1,5 +1,5 @@
 """
-Created on Jan 9, 2019
+Created on January 2019
 
 @author: Jesús J. Doménech
 """
@@ -11,6 +11,7 @@ from ppl import Variable
 
 
 class ppllib(lpInterface):
+    # TODO: Define lib
     """
     >>> ppllib()
     Traceback (most recent call last):
@@ -23,7 +24,7 @@ class ppllib(lpInterface):
     def _transform_polyhedron(polyhedron):
         """
         :param poly:
-        :type poly: `lpi.Polyhedron.Polyhedron`
+        :type poly: `lpi.C_Polyhedron`
         """
         # TODO: DOC Return value _transform poly
         vs = polyhedron.get_variables()
@@ -40,6 +41,10 @@ class ppllib(lpInterface):
 
     @staticmethod
     def _transform_expression(expression):
+        """
+        :param expression:
+        :type expression: `lpi.Expression`
+        """
         vs = expression.get_variables()
 
         def toVar(v):
@@ -53,8 +58,8 @@ class ppllib(lpInterface):
 
     @staticmethod
     def _convert_into_polyhedron(polyhedron, vars_, dim):
-        from lpi.Expressions import ExprTerm
-        from lpi.Polyhedron import Polyhedron
+        from lpi import ExprTerm
+        from lpi import C_Polyhedron
         d = len(vars_)
         vs = vars_[:]
         if d < dim:
@@ -79,7 +84,7 @@ class ppllib(lpInterface):
             else:
                 return equation >= 0
         cons = [parse_cons(c) for c in polyhedron.get_constraints()]
-        return Polyhedron(constraints=cons, variables=vars_)
+        return C_Polyhedron(constraints=cons, variables=vars_)
 
     @staticmethod
     def get_point(polyhedron):
@@ -244,7 +249,6 @@ class ppllib(lpInterface):
     def widening_assign(polyhedron1, polyhedron2, tp=0):
         poly1, vars_, dimension = ppllib._transform_polyhedron(polyhedron1)
         poly2, __, __ = ppllib._transform_polyhedron(polyhedron2)
-        # TODO: transform result
         poly1.widening_assign(poly2, tp)
         return ppllib._convert_into_polyhedron(poly1, vars_, dimension)
 
@@ -284,6 +288,40 @@ class ppllib(lpInterface):
         return ppllib._convert_into_polyhedron(poly, final_vs, poly.space_dimension())
 
     @staticmethod
+    def expand_space_dimension(polyhedron, var, m):
+        poly, vars_, dimension = ppllib._transform_polyhedron(polyhedron)
+        if var not in vars_:
+            raise ValueError("Variable ({}) not in polyhedron".format(var))
+        poly.expand_space_dimension(Variable(vars_.index(var)), m)
+        dim = poly.space_dimension()
+        final_vs = vars_[:]
+        base = "x"
+        num = dimension
+        for __ in range(dimension, dim):
+            v = base + str(num)
+            while v in final_vs:
+                num += 1
+                v = base + str(num)
+            num += 1
+            final_vs.append(v)
+        return ppllib._convert_into_polyhedron(poly, final_vs, dim)
+
+    @staticmethod
+    def intersection_assign(polyhedron1, polyhedron2):
+        poly1, vars_, dimension = ppllib._transform_polyhedron(polyhedron1)
+        poly2, __, __ = ppllib._transform_polyhedron(polyhedron2)
+        poly1.intersection_assign(poly2)
+        return ppllib._convert_into_polyhedron(poly1, vars_, dimension)
+
+    @staticmethod
+    def unconstraint(polyhedron, var):
+        poly, vars_, dimension = ppllib._transform_polyhedron(polyhedron)
+        if var not in vars_:
+            raise ValueError("Variable ({}) not in polyhedron".format(var))
+        poly.unconstrain(Variable(vars_.index(var)))
+        return ppllib._convert_into_polyhedron(poly, vars_, dimension)
+
+    @staticmethod
     def project(polyhedron, var_set):
         from ppl import Variables_Set
         poly, vars_, dimension = ppllib._transform_polyhedron(polyhedron)
@@ -299,15 +337,8 @@ class ppllib(lpInterface):
                 do_it = True
                 vs.insert(Variable(i))
         if len(var_set) > len(final_vs):
-            raise ValueError("Polyhedron can NOT be projected to vars: {},\n because some variables are not in the polyhedron.".format(var_set))
+            raise ValueError("Polyhedron can NOT be projected to the vars: {},\n because some variables are not in the polyhedron.".format(var_set))
 
         if do_it:
             poly.remove_dimensions(vs)
         return ppllib._convert_into_polyhedron(poly, final_vs, poly.space_dimension())
-
-
-if __name__ == "__main__":
-    import doctest
-    f, __ = doctest.testmod()
-    if f == 0:
-        print("All tests passed.")

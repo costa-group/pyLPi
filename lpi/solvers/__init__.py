@@ -1,7 +1,16 @@
 """
-Created on Jan 9, 2019
+SMT solvers manager
+
+Created on January 2019
 
 @author: Jesús J. Doménech
+Contents
+--------
+
+.. autosummary::
+    :toctree: _autosummary
+
+    z3Solver
 """
 
 

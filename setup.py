@@ -14,6 +14,12 @@ requires = ['pplpy>=0.7.1', 'z3-solver']
 dependency_links = [
     'git+https://github.com/jesusjda/pplpy.git#egg=pplpy-0.7.1'
 ]
+solver_name = "solvers"
+lp_name = "lp"
+solver_dir = os.path.join(pkg_dir, solver_name)
+lp_dir = os.path.join(pkg_dir, lp_name)
+solver_name = pkg_name + "." + solver_name
+lp_name = pkg_name + "." + lp_name
 
 setup(
     name='pylpi',
@@ -26,9 +32,9 @@ setup(
     download_url='https://github.com/jesusjda/pyLPi/archive/{}.tar.gz'.format(VERSION),
     license='GPL v3',
     platforms=['any'],
-    packages=[pkg_name],
-    package_dir={pkg_name: pkg_dir},
-    package_data={pkg_name: ['*.py']},
+    packages=[pkg_name, solver_name, lp_name],
+    package_dir={pkg_name: pkg_dir, solver_name: solver_dir, lp_name: lp_dir},
+    package_data={pkg_name: ['*.py'], solver_name: ['*.py'], lp_name: ['*.py']},
     install_requires=requires,
     dependency_links=dependency_links,
     classifiers=[

@@ -1,6 +1,17 @@
 """
-author: Jesús J. Doménech
-Date: January 2019
+Linear Programming manager
+
+Created on January 2019
+
+@author: Jesús J. Doménech
+
+Contents
+--------
+
+.. autosummary::
+    :toctree: _autosummary
+
+    ppllib
 """
 
 
