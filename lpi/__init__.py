@@ -26,9 +26,12 @@ from lpi.constraints import Constraint
 from lpi.polyhedron import C_Polyhedron
 from lpi.expressions import Expression
 from lpi.expressions import ExprTerm
+from lpi.solvers import solver_factory
+from lpi.lp import lp_factory
 
 
-__all__ = ["C_Polyhedron", "Constraint", "Expression", "ExprTerm"]
+__all__ = ["C_Polyhedron", "Constraint", "Expression", "ExprTerm",
+           "solver_factory", "lp_factory"]
 
 
 def tests():
@@ -48,11 +51,3 @@ def tests():
         if f == 0:
             print("Test passed: `{}`".format(m.__name__))
     return F, T
-
-
-if __name__ == "__main__":
-    F, __ = tests()
-    if F == 0:
-        print("#" * 20)
-        print("# All test passed. #")
-        print("#" * 20)
