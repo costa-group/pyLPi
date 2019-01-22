@@ -1,3 +1,8 @@
+v1.0 2019/01/22
+- C_Polyhedron is a lazy implementation that uses ppl inside.
+- All methods have been updated, they uses our implementations of
+expressions and constraints.
+- Added some tests and documentation.
 v0.3 2019/01/11
 - separate lp from smt
 - defined constraints, expressions and polyhedrons

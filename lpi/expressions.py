@@ -13,95 +13,145 @@ class opExp(Enum):
 
 class Expression(object):
 
-    def __init__(self, left, op: opExp, right):
-        if not isinstance(left, Expression):
-            try:
-                left = ExprTerm(left)
-            except ValueError:
-                raise ValueError("left argument is not a valid Expression.")
-        if not isinstance(right, Expression):
-            try:
-                right = ExprTerm(right)
-            except ValueError:
-                raise ValueError("right argument is not a valid Expression.")
-        if not isinstance(op, opExp):
-            raise ValueError("{} is not a valid Operation.".format(op))
+    def __init__(self, left=None, op=None, right=None):
         from collections import Counter
         summands = []
         max_degree = 0
         n_vs = []
-        if op == opExp.DIV:
-            if(len(right._summands) > 1 or
-               len(right._summands[0][1]) > 0):
-                raise TypeError("Unsupported division by polynom.")
+        if left is not None and not isinstance(left, Expression):
+            try:
+                left = self._term_exp(left)
+            except ValueError:
+                raise ValueError("Left argument is not a valid Expression.")
+        elif left is not None:
+            left = left.copy()
+        if op is None:
+            if left is None:
+                summands = []
+                max_degree = 0
+                n_vs = []
             else:
-                r_coeff = right._summands[0][0]
-                if r_coeff == 0:
-                    raise TypeError("Division by zero.")
-                for s in left._summands:
-                    coeff = s[0] / r_coeff
-                    if coeff != 0:
-                        summands.append((coeff, s[1]))
+                summands = left._summands[:]
                 max_degree = left.degree()
-                n_vs = left.get_variables()
-        elif op == opExp.MUL:
-            tmp_summands = []
-            for l_s in left._summands:
-                l_coeff, l_vars = l_s
-                for l_r in right._summands:
-                    coeff = l_coeff * l_r[0]
-                    var = l_vars + l_r[1]
-                    var.sort()
+                n_vs = list(left.get_variables())
+        else:
+            if right is None or left is None:
+                raise ValueError("Wrong parameters.")
+            if not isinstance(right, Expression):
+                try:
+                    right = self._term_exp(right)
+                except ValueError:
+                    raise ValueError("Right argument is not a valid Expression.")
+            else:
+                right = right.copy()
+            if not isinstance(op, opExp):
+                raise ValueError("{} is not a valid Operation.".format(op))
+            if op == opExp.DIV:
+                if(len(right._summands) > 1 or
+                   len(right._summands[0][1]) > 0):
+                    raise ValueError("Unsupported division by polynom.")
+                else:
+                    r_coeff = right._summands[0][0]
+                    if r_coeff == 0:
+                        raise ValueError("Division by zero.")
+                    for s in left._summands:
+                        coeff = s[0] / r_coeff
+                        if coeff != 0:
+                            summands.append((coeff, s[1]))
+                    max_degree = left.degree()
+                    n_vs = list(left.get_variables())
+            elif op == opExp.MUL:
+                tmp_summands = []
+                for l_s in left._summands:
+                    l_coeff, l_vars = l_s
+                    for l_r in right._summands:
+                        coeff = l_coeff * l_r[0]
+                        var = l_vars + l_r[1]
+                        var.sort()
+                        if coeff != 0:
+                            tmp_summands.append((coeff, var))
+                var_set = []
+                while len(tmp_summands) > 0:
+                    coeff, vs = tmp_summands.pop(0)
+                    for sr in tmp_summands:
+                        if Counter(vs) == Counter(sr[1]):
+                            coeff += sr[0]
+                            tmp_summands.remove(sr)
                     if coeff != 0:
-                        tmp_summands.append((coeff, var))
-            var_set = set()
-            while len(tmp_summands) > 0:
-                coeff, vs = tmp_summands.pop(0)
-                for sr in tmp_summands:
-                    if Counter(vs) == Counter(sr[1]):
-                        coeff += sr[0]
-                        tmp_summands.remove(sr)
-                if coeff != 0:
-                    if len(vs) > max_degree:
-                        max_degree = len(vs)
-                    var_set.union(vs)
-                    summands.append((coeff, vs))
-            n_vs = list(var_set)
-            del var_set
-        elif op in [opExp.ADD, opExp.SUB]:
-            symb = 1
-            if op == opExp.SUB:
-                symb = -1
-            pending_summands = right._summands
-            var_set = set()
-            for s in left._summands:
-                coeff, vs = s
-                for sr in pending_summands:
-                    if Counter(vs) == Counter(sr[1]):
-                        coeff += symb * sr[0]
-                        pending_summands.remove(sr)
-                if coeff != 0:
-                    if len(vs) > max_degree:
-                        max_degree = len(vs)
-                    var_set.union(vs)
-                    summands.append((coeff, vs))
-            for coeff, vs in pending_summands:
-                if coeff != 0:
-                    if len(vs) > max_degree:
-                        max_degree = len(vs)
-                    var_set.union(vs)
-                    summands.append((symb * coeff, vs))
-            n_vs = list(var_set)
-            del var_set
+                        if len(vs) > max_degree:
+                            max_degree = len(vs)
+                        var_set += [_v for _v in vs if _v not in var_set]
+                        summands.append((coeff, vs))
+                n_vs = var_set
+            elif op in [opExp.ADD, opExp.SUB]:
+                symb = 1
+                if op == opExp.SUB:
+                    symb = -1
+                pending_summands = right._summands
+                var_set = []
+                for s in left._summands:
+                    coeff, vs = s
+                    for sr in pending_summands:
+                        if Counter(vs) == Counter(sr[1]):
+                            coeff += symb * sr[0]
+                            pending_summands.remove(sr)
+                    if coeff != 0:
+                        if len(vs) > max_degree:
+                            max_degree = len(vs)
+                        var_set += [_v for _v in vs if _v not in var_set]
+                        summands.append((coeff, vs))
+                for coeff, vs in pending_summands:
+                    if coeff != 0:
+                        if len(vs) > max_degree:
+                            max_degree = len(vs)
+                        var_set += [_v for _v in vs if _v not in var_set]
+                        summands.append((symb * coeff, vs))
+                n_vs = var_set
         self._summands = summands
         self._degree = max_degree
         self._vars = n_vs
+
+    def copy(self):
+        E = Expression()
+        E._summands = self._summands[:]
+        E._degree = self.degree()
+        E._vars = list(self.get_variables())
+        return E
+
+    def _term_exp(self, value):
+        ss, d, vs = self._term(value)
+        ex = Expression()
+        ex._summands = ss
+        ex._degree = d
+        ex._vars = vs
+        return ex
+
+    def _term(self, value):
+        vs = []
+        coeff = 1
+        if isinstance(value, (float, int)):
+            coeff = value
+        else:
+            try:
+                coeff = float(value)
+            except ValueError:
+                import re
+                vlist = value
+                if not isinstance(value, list):
+                    vlist = [value]
+                vs = []
+                for v in vlist:
+                    if re.match("(^([\w_][\w0-9\'\^_\!\.]*)$)", v):
+                        vs.append(v)
+                    else:
+                        raise ValueError("{} is not a valid Term.".format(v))
+        return [(coeff, vs)], len(vs), list(vs)
 
     def degree(self): return self._degree
 
     def is_linear(self): return self.degree() < 2
 
-    def get_variables(self): return self._vars
+    def get_variables(self): return self._vars[:]
 
     def get_coeff(self, variables=[]):
         if isinstance(variables, str):
@@ -111,6 +161,9 @@ class Expression(object):
             if Counter(variables) == Counter(sr[1]):
                 return sr[0]
         return 0
+
+    def is_constant(self):
+        return len(self._vars) == 0
 
     def toString(self, toVar, toNum):
         txt = ""
@@ -139,6 +192,30 @@ class Expression(object):
         return txt
 
     def __repr__(self): return self.toString(str, int)
+
+    def renamed(self, old_names, new_names):
+        from collections import Counter
+        corresponding = {o: n for o, n in zip(old_names, new_names)}
+        tmp_summands = [(c, [corresponding[v] for v in vs]) for c, vs in self._summands]
+        var_set = []
+        max_degree = 0
+        summands = []
+        while len(tmp_summands) > 0:
+            coeff, vs = tmp_summands.pop(0)
+            for sr in tmp_summands:
+                if Counter(vs) == Counter(sr[1]):
+                    coeff += sr[0]
+                    tmp_summands.remove(sr)
+            if coeff != 0:
+                if len(vs) > max_degree:
+                    max_degree = len(vs)
+                var_set += [_v for _v in vs if _v not in var_set]
+                summands.append((coeff, vs))
+        exp = Expression()
+        exp._summands = summands
+        exp._degree = max_degree
+        exp._vars = var_set
+        return exp
 
     def get(self, toVar, toNum, toExp=lambda x: x, ignore_zero=False):
         """
@@ -195,33 +272,33 @@ class Expression(object):
     def __add__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = ExprTerm(other)
-        elif not isinstance(other, (ExprTerm, Expression)):
-            raise NotImplementedError()
+            right = self._term_exp(other)
+        elif not isinstance(other, Expression):
+            raise NotImplementedError("Expression can't add type: {}".format(type(other)))
         return Expression(self, opExp.ADD, right)
 
     def __sub__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = ExprTerm(other)
-        elif not isinstance(other, (ExprTerm, Expression)):
-            raise NotImplementedError()
+            right = self._term_exp(other)
+        elif not isinstance(other, Expression):
+            raise NotImplementedError("Expression can't substract type: {}".format(type(other)))
         return Expression(self, opExp.SUB, right)
 
     def __mul__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = ExprTerm(other)
-        elif not isinstance(other, (ExprTerm, Expression)):
-            raise NotImplementedError()
+            right = self._term_exp(other)
+        elif not isinstance(other, Expression):
+            raise NotImplementedError("Expression can't multiply type: {}".format(type(other)))
         return Expression(self, opExp.MUL, right)
 
     def __truediv__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = ExprTerm(other)
-        elif not isinstance(other, (ExprTerm, Expression)):
-            raise NotImplementedError()
+            right = self._term_exp(other)
+        elif not isinstance(other, Expression):
+            raise NotImplementedError("Expression can't be divided by type: {}".format(type(other)))
         return Expression(self, opExp.DIV, right)
 
     def __neg__(self):
@@ -233,40 +310,40 @@ class Expression(object):
     def __radd__(self, other):
         left = other
         if isinstance(other, (float, int)):
-            left = ExprTerm(other)
-        elif not isinstance(other, (ExprTerm, Expression)):
-            raise NotImplementedError()
+            left = self._term_exp(other)
+        elif not isinstance(other, Expression):
+            raise NotImplementedError(type(other))
         return Expression(left, opExp.ADD, self)
 
     def __rsub__(self, other):
         left = other
         if isinstance(other, (float, int)):
-            left = ExprTerm(other)
-        elif not isinstance(other, (ExprTerm, Expression)):
-            raise NotImplementedError()
+            left = self._term_exp(other)
+        elif not isinstance(other, Expression):
+            raise NotImplementedError(type(other))
         return Expression(left, opExp.SUB, self)
 
     def __rmul__(self, other):
         left = other
         if isinstance(other, (float, int)):
-            left = ExprTerm(other)
-        elif not isinstance(other, (ExprTerm, Expression)):
-            raise NotImplementedError()
+            left = self._term_exp(other)
+        elif not isinstance(other, Expression):
+            raise NotImplementedError(type(other))
         return Expression(left, opExp.MUL, self)
 
     def __rtruediv__(self, other):
         left = other
         if isinstance(other, (float, int)):
-            left = ExprTerm(other)
-        elif not isinstance(other, (ExprTerm, Expression)):
-            raise NotImplementedError()
+            left = self._term_exp(other)
+        elif not isinstance(other, Expression):
+            raise NotImplementedError(type(other))
         return Expression(left, opExp.DIV, self)
 
     def __lt__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = ExprTerm(other)
-        elif not isinstance(other, (ExprTerm, Expression)):
+            right = self._term_exp(other)
+        elif not isinstance(other, Expression):
             raise NotImplementedError()
         from lpi.constraints import opCMP
         from lpi.constraints import Constraint
@@ -275,8 +352,8 @@ class Expression(object):
     def __le__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = ExprTerm(other)
-        elif not isinstance(other, (ExprTerm, Expression)):
+            right = self._term_exp(other)
+        elif not isinstance(other, Expression):
             raise NotImplementedError()
         from lpi.constraints import opCMP
         from lpi.constraints import Constraint
@@ -285,9 +362,9 @@ class Expression(object):
     def __eq__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = ExprTerm(other)
-        elif not isinstance(other, (ExprTerm, Expression)):
-            raise NotImplementedError()
+            right = self._term_exp(other)
+        elif not isinstance(other, Expression):
+            raise NotImplementedError(type(other))
         from lpi.constraints import opCMP
         from lpi.constraints import Constraint
         return Constraint(self, opCMP.EQ, right)
@@ -295,8 +372,8 @@ class Expression(object):
     def __gt__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = ExprTerm(other)
-        elif not isinstance(other, (ExprTerm, Expression)):
+            right = self._term_exp(other)
+        elif not isinstance(other, Expression):
             raise NotImplementedError()
         from lpi.constraints import opCMP
         from lpi.constraints import Constraint
@@ -305,38 +382,9 @@ class Expression(object):
     def __ge__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = ExprTerm(other)
-        elif not isinstance(other, (ExprTerm, Expression)):
+            right = self._term_exp(other)
+        elif not isinstance(other, Expression):
             raise NotImplementedError()
         from lpi.constraints import opCMP
         from lpi.constraints import Constraint
         return Constraint(self, opCMP.GEQ, right)
-
-
-class ExprTerm(Expression):
-
-    def __init__(self, value):
-        vs = []
-        coeff = 1
-        if isinstance(value, (float, int)):
-            coeff = value
-        else:
-            try:
-                coeff = float(value)
-            except ValueError:
-                import re
-                vlist = value
-                if not isinstance(value, list):
-                    vlist = [value]
-                vs = []
-                for v in vlist:
-                    if re.match("(^([\w_][\w0-9\'\^_\!\.]*)$)", v):
-                        vs.append(v)
-                    else:
-                        raise ValueError("{} is not a valid Term.".format(v))
-        self._summands = [(coeff, vs)]
-        self._degree = len(vs)
-        self._vars = list(vs)
-
-    def __neg__(self):
-        return self * (-1)

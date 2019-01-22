@@ -8,7 +8,6 @@ Submodules
     :toctree: _autosummary
 
     solvers
-    lp
 
 Contents
 --------
@@ -16,32 +15,29 @@ Contents
 .. autosummary::
     :toctree: _autosummary
 
-    polyhedron
-    constraints
-    expressions
+    polyhedron.C_Polyhedron
+    constraints.Constraint
+    expressions.Expression
     utils
 
 """
 from lpi.constraints import Constraint
 from lpi.polyhedron import C_Polyhedron
 from lpi.expressions import Expression
-from lpi.expressions import ExprTerm
 from lpi.solvers import solver_factory
-from lpi.lp import lp_factory
 
 
-__all__ = ["C_Polyhedron", "Constraint", "Expression", "ExprTerm",
-           "solver_factory", "lp_factory"]
+__all__ = ["C_Polyhedron", "Constraint", "Expression",
+           "solver_factory", "smtlib"]
 
 
 def tests():
     import doctest
     import lpi
-    import lpi.lp.ppllib
     import lpi.solvers.z3Solver
     import lpi.polyhedron
     import lpi.utils
-    mods = [lpi, lpi.solvers, lpi.solvers.z3Solver, lpi.lp, lpi.lp.ppllib,
+    mods = [lpi, lpi.solvers, lpi.solvers.z3Solver,
             lpi.polyhedron, lpi.expressions, lpi.constraints, lpi.utils]
     F, T = 0, 0
     for m in mods:
@@ -51,3 +47,6 @@ def tests():
         if f == 0:
             print("Test passed: `{}`".format(m.__name__))
     return F, T
+
+
+smtlib = solver_factory("z3")

@@ -25,7 +25,7 @@ class SolverInterface:
         raise Exception("Can NOT be instantiate.")
 
     @staticmethod
-    def _transform_polyhedron(polyhedron): raise NotImplementedError()
+    def transform(polyhedron): raise NotImplementedError()
 
     @staticmethod
     def _convert_into_polyhedron(*args): raise NotImplementedError()

@@ -7,8 +7,9 @@ from lpi.utils import lcm
 
 
 class z3Solver(SolverInterface):
-    # TODO: Define lib
     """
+    Implementation of the `SolverInterface` using z3.
+    this class can NOT be instantiate, all their methods are static.
     >>> z3Solver()
     Traceback (most recent call last):
     ...
@@ -17,27 +18,30 @@ class z3Solver(SolverInterface):
     _ID = "z3"
 
     @staticmethod
-    def _transform_polyhedron(polyhedron):
-        vs = polyhedron.get_variables()
-        dim = polyhedron.get_dimension()
+    def transform(polyhedron):
+        return z3Solver._transform(polyhedron.get_constraints(), polyhedron.get_variables())
+
+    @staticmethod
+    def _transform(expression, vars_=None):
+        if isinstance(expression, list):
+            return [z3Solver._transform(e, vars_=vars_) for e in expression]
 
         def toVar(v):
-            if v in vs:
+            if v in vars_:
                 return Real(v)
             else:
                 raise ValueError("{} is not a variable.".format(v))
-        cs = [c.get(toVar, int, ignore_zero=True)
-              for c in polyhedron.get_constraints()]
-        return (cs, vs, dim)
+
+        return expression.get(toVar, int, ignore_zero=True)
 
     @staticmethod
     def _convert_into_polyhedron(solver, vars_):
-        from lpi import ExprTerm
+        from lpi import Expression
         from lpi import C_Polyhedron
 
         def parse_cons_tree(tree):
             if tree.num_args() == 0:
-                return ExprTerm(str(tree))
+                return Expression(str(tree))
             else:
                 op = tree.decl().name()
                 if op == "*":
@@ -66,33 +70,34 @@ class z3Solver(SolverInterface):
     def get_point(polyhedron):
         """
         >>> from lpi import C_Polyhedron
-        >>> from lpi import ExprTerm
+        >>> from lpi import Expression
         >>> from lpi.solvers import solver_factory
-        >>> exp = 5 * ExprTerm('x')
-        >>> y = ExprTerm('y')
+        >>> exp = 5 * Expression('x')
+        >>> y = Expression('y')
         >>> p = C_Polyhedron([exp < y, exp <= y, exp + y > 3, y > 2], ['x', 'y'])
         >>> solver_factory('z3').get_point(p)
-        ([0.0, 4.0], 1)
+        (2 * y, 1)
         """
-        cons, vars_, __ = z3Solver._transform_polyhedron(polyhedron)
+        from lpi import Expression
+        vars_ = polyhedron.get_variables()
+        cons = z3Solver._transform(polyhedron.get_constraints(), vars_)
         s = Solver()
         s.add(cons)
         if s.check() == sat:
             # build POINT
             coeffs = s.model()
-            point = []
             divisor = lcm([int(str(coeffs[f].denominator()))
                            for f in coeffs])
-
+            exp = Expression(0)
             for v in vars_:
                 if coeffs[Real(v)] is not None:
                     ci = int(str(coeffs[Real(v)].numerator()))
                     ci *= (divisor / int(str(coeffs[Real(v)].denominator())))
                 else:
                     ci = 0
-                point.append(ci)
+                exp += ci * Expression(v)
 
-            return (point, divisor)
+            return (exp, divisor)
         else:
             return None, 1
 
@@ -100,19 +105,18 @@ class z3Solver(SolverInterface):
     def is_sat(polyhedron):
         """
         >>> from lpi import C_Polyhedron
-        >>> from lpi import ExprTerm
+        >>> from lpi import Expression
         >>> from lpi.solvers import solver_factory
-        >>> exp = 5 * ExprTerm('x')
-        >>> y = ExprTerm('y')
+        >>> exp = 5 * Expression('x')
+        >>> y = Expression('y')
         >>> p = C_Polyhedron([exp < y, exp <= y, exp + y > 3, y > 2], ['x', 'y'])
         >>> solver_factory('z3').is_sat(p)
         True
         """
-        cons, __, __ = z3Solver._transform_polyhedron(polyhedron)
+        cons = z3Solver._transform(polyhedron.get_constraints(), polyhedron.get_variables())
         s = Solver()
         s.add(cons)
         return s.check() == sat
-
 
 if __name__ == "__main__":
     import doctest

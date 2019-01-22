@@ -1,6 +1,5 @@
 from enum import Enum
 from lpi.expressions import Expression
-from lpi.expressions import ExprTerm
 from lpi.expressions import opExp
 
 
@@ -21,6 +20,8 @@ class BoolExpression(object):
     def degree(self): raise NotImplementedError()
 
     def get_variables(self): raise NotImplementedError()
+
+    def normalize(self, mode="int"): raise NotImplementedError()
 
     def is_linear(self):
         return self.degree() < 2
@@ -79,6 +80,21 @@ class opCMP(Enum):
         if self == opCMP.NEQ:
             return neq_symb
 
+    def check(self, a, b):
+        if self == opCMP.LT:
+            return a < b
+        if self == opCMP.GT:
+            return a > b
+        if self == opCMP.LEQ:
+            return a <= b
+        if self == opCMP.GEQ:
+            return a >= b
+        if self == opCMP.EQ:
+            return a == b
+        if self == opCMP.NEQ:
+            return a != b
+        return False
+
     def __repr__(self):
         return self.toString()
 
@@ -90,18 +106,18 @@ class Constraint(BoolExpression):
            (right is not None and not isinstance(right, Expression)) or
            (not isinstance(op, opCMP))):
             raise ValueError()
-        exp = left
         a_op = op
-        if right is not None:
-            exp = exp - right
-        neg = True
-        for c, __ in exp._summands:
-            if c > 0:
-                neg = False
-                break
-        if neg:
-            exp = 0 - exp
-            a_op = a_op.oposite()
+        if op in [opCMP.LEQ, opCMP.LT]:
+            a_op = op.oposite()
+            if right is not None:
+                exp = right - left
+            else:
+                exp = - left
+        else:
+            exp = left
+            if right is not None:
+                exp = exp - right
+
         self._exp = exp
         self._op = a_op
         self._vars = self._exp.get_variables()
@@ -110,13 +126,16 @@ class Constraint(BoolExpression):
     def to_DNF(self): return Or(And(self))
 
     def negate(self):
-        zero = ExprTerm(0)
         if self._op == opCMP.EQ:
-            return Or(Constraint(self._exp, opCMP.GT, zero),
-                      Constraint(self._exp, opCMP.LT, zero))
-        return Constraint(self._exp, self._op.complement(), zero)
+            return Or(Constraint(self._exp, opCMP.GT),
+                      Constraint(self._exp, opCMP.LT))
+        return Constraint(self._exp, self._op.complement())
 
-    def is_true(self): return False
+    def is_true(self):
+        if self._exp.is_constant():
+            const = self._exp.get_coeff()
+            return self._op.check(const, 0)
+        return False
 
     def is_false(self): return False
 
@@ -124,9 +143,26 @@ class Constraint(BoolExpression):
 
     def degree(self): return self._degree
 
-    def get_variables(self): return self._vars
+    def renamed(self, old_names, new_names):
+        return Constraint(self._exp.renamed(old_names, new_names), self._op)
+
+    def get_variables(self):
+        return self._vars[:]
 
     def get_independent_term(self): return self._exp.get_coeff()
+
+    def normalize(self, mode="int"):
+        if self._op in [opCMP.EQ, opCMP.GEQ]:
+            return Constraint(self._exp, self._op)
+        elif mode == "int":
+            return Constraint(self._exp + 1, opCMP.GEQ)
+        elif mode == "rat":
+            return Constraint(self._exp, opCMP.GEQ)
+        else:
+            raise ValueError("Unknown transformation mode: {}".format(mode))
+
+    def get_coefficient(self, variable):
+        return self._exp.get_coeff(variable)
 
     def isolate(self, variable):
         """
@@ -167,6 +203,14 @@ class Constraint(BoolExpression):
     def toString(self, toVar, toNum, eq_symb="==", leq_symb="<=", geq_symb=">=", lt_symb="<", gt_symb=">", neq_symb="!="):
         op = self._op.toString(eq_symb=eq_symb, leq_symb=leq_symb, geq_symb=geq_symb, lt_symb=lt_symb, gt_symb=gt_symb, neq_symb=neq_symb)
         return "{} {} 0".format(self._exp.toString(toVar, toNum), op)
+
+    def __eq__(self, other):
+        if not isinstance(other, Constraint):
+            raise ValueError("...")
+        if self._op != other._op:
+            return False
+        e = self._exp - other._exp
+        return e.is_constant() and e.get_coeff() == 0
 
 
 class Implies(BoolExpression):
