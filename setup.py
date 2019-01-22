@@ -15,11 +15,9 @@ dependency_links = [
     'git+https://github.com/jesusjda/pplpy.git#egg=pplpy-0.7.1'
 ]
 solver_name = "solvers"
-lp_name = "lp"
 solver_dir = os.path.join(pkg_dir, solver_name)
-lp_dir = os.path.join(pkg_dir, lp_name)
 solver_name = pkg_name + "." + solver_name
-lp_name = pkg_name + "." + lp_name
+
 
 setup(
     name='pylpi',
@@ -32,24 +30,22 @@ setup(
     download_url='https://github.com/jesusjda/pyLPi/archive/{}.tar.gz'.format(VERSION),
     license='GPL v3',
     platforms=['any'],
-    packages=[pkg_name, solver_name, lp_name],
-    package_dir={pkg_name: pkg_dir, solver_name: solver_dir, lp_name: lp_dir},
-    package_data={pkg_name: ['*.py'], solver_name: ['*.py'], lp_name: ['*.py']},
+    packages=[pkg_name, solver_name],
+    package_dir={pkg_name: pkg_dir, solver_name: solver_dir},
+    package_data={pkg_name: ['*.py'], solver_name: ['*.py']},
     install_requires=requires,
     dependency_links=dependency_links,
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: C++",
         "Programming Language :: Python",
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 5 - Production/Stable",
         "Operating System :: Unix",
         "Intended Audience :: Science/Research",
-        "Programming Language :: Python :: 2",
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6'
     ],
-    keywords=['linear-programming', 'ppl', 'z3', 'polyhedra']
+    keywords=['linear-programming', 'ppl', 'z3', 'polyhedra', 'expressions', 'constraints']
 )
