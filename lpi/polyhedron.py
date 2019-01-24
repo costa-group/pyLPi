@@ -80,7 +80,6 @@ class C_Polyhedron:
                 return equation == 0
             else:
                 return equation >= 0
-
         self._constraints = [parse_cons(c) for c in self._poly.constraints()]
         self._updated = True
 
@@ -283,19 +282,19 @@ class C_Polyhedron:
         self._build_poly()
         other._build_poly()
         self._poly.widening_assign(other._poly, tp)
+        self._poly.minimized_constraints()
         self._updated = False
 
     def extrapolation_assign(self, other, cs, tp=0, limited=False):
         self._build_poly()
         other._build_poly()
         from ppl import Constraint_System
-        if isinstance(cs, Constraint_System):
-            raise Exception("Deprecated!")
         cons = Constraint_System(self.transform(cs, self._variables))
         if limited:
             self._poly.limited_H79_extrapolation_assign(other._poly, cons, tp)
         else:
             self._poly.bounded_H79_extrapolation_assign(other._poly, cons, tp)
+        self._poly.minimized_constraints()
         self._updated = False
 
     def add_dimensions(self, dim, variables):

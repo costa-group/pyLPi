@@ -118,6 +118,7 @@ class z3Solver(SolverInterface):
         s.add(cons)
         return s.check() == sat
 
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod(verbose=True)
