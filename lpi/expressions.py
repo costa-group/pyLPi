@@ -167,12 +167,18 @@ class Expression(object):
 
     def toString(self, toVar, toNum):
         txt = ""
-        _one = toNum(1)
-        _minusone = toNum(-1)
+        _one = toNum(1.0)
+        _minusone = toNum(-1.0)
         _zero = toNum(0.0)
         for s in self._summands:
             txt_s = ""
             s0_num = toNum(s[0])
+            if s0_num > _zero and txt != "":
+                txt += " + "
+            elif s0_num < _zero and txt != "":
+                txt += " "
+            elif s0_num == _zero:
+                continue
             if len(s[1]) > 0:
                 if s0_num != _one and s0_num != _minusone:
                     txt_s += str(s0_num) + " * "
@@ -181,11 +187,6 @@ class Expression(object):
                 txt_s += " * ".join([toVar(v) for v in s[1]])
             elif s0_num != _zero:
                 txt_s = str(s0_num)
-
-            if s0_num > _zero and txt != "":
-                txt += " + "
-            elif txt != "":
-                txt += " "
             txt += txt_s
         if txt == "":
             txt = "0"

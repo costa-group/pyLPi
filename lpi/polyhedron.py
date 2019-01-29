@@ -17,14 +17,11 @@ class C_Polyhedron:
         :param variables: list of variables names.
         :type variables: `list` of `string`
         """
-        from ppl import Constraint_System
-        if constraint_system is not None or dim is not None or isinstance(constraints, Constraint_System):
-            raise Exception("Deprecated!")
         self._cons_mode = "int"  # a > b  --> a + 1 >= b
         # self._cons_mode = "rat"  # a > b  --> a >= b
         self._existsPoly = False
         self._updated = True
-        self._constraints = [c.normalize(mode=self._cons_mode) for c in constraints]
+        self._constraints = [c.normalized(mode=self._cons_mode) for c in constraints]
         self._variables = variables[:]
         self._dimension = len(variables)
         self._poly = None
@@ -105,7 +102,7 @@ class C_Polyhedron:
         :param constraints: List to be added.
         :type constraints: `list` of `lpi.Constraint`
         """
-        cs = [c.normalize(mode=self._cons_mode) for c in constraints]
+        cs = [c.normalized(mode=self._cons_mode) for c in constraints]
         self._constraints += cs
         if self._existsPoly:
             self._poly.add_constraints(self.transform(cs, self._variables))

@@ -11,17 +11,19 @@ class BoolExpression(object):
 
     def negate(self): raise NotImplementedError()
 
-    def is_true(self): raise NotImplementedError()
+    def normalized(self, mode="int"): raise NotImplementedError()
 
-    def is_false(self): raise NotImplementedError()
+    def renamed(self, old_names, new_names): raise NotImplementedError()
 
-    def toString(self, toVar, toNum, eq_symb="==", leq_symb="<=", geq_symb=">=", lt_symb="<", gt_symb=">", neq_symb="!="): raise NotImplementedError()
+    def get(self, toVar, toNum, toExp=lambda x: x, ignore_zero=False, toAnd=None, toOr=None): raise NotImplementedError()
 
     def degree(self): raise NotImplementedError()
 
     def get_variables(self): raise NotImplementedError()
 
-    def normalize(self, mode="int"): raise NotImplementedError()
+    def is_true(self): raise NotImplementedError()
+
+    def is_false(self): raise NotImplementedError()
 
     def is_linear(self):
         return self.degree() < 2
@@ -29,8 +31,11 @@ class BoolExpression(object):
     def is_equality(self):
         return False
 
+    def toString(self, toVar, toNum, eq_symb="==", leq_symb="<=", geq_symb=">=", lt_symb="<", gt_symb=">",
+                 neq_symb="!=", or_symb="OR", and_symb="AND", imp_symb="->"): raise NotImplementedError()
+
     def __repr__(self):
-        return self.toString(str, int, eq_symb="==", leq_symb="<=", geq_symb=">=", lt_symb="<", gt_symb=">", neq_symb="!=")
+        return self.toString(str, int)
 
 
 class opCMP(Enum):
@@ -123,7 +128,7 @@ class Constraint(BoolExpression):
         self._vars = self._exp.get_variables()
         self._degree = self._exp.degree()
 
-    def to_DNF(self): return Or(And(self))
+    def to_DNF(self): return [[self]]
 
     def negate(self):
         if self._op == opCMP.EQ:
@@ -131,27 +136,7 @@ class Constraint(BoolExpression):
                       Constraint(self._exp, opCMP.LT))
         return Constraint(self._exp, self._op.complement())
 
-    def is_true(self):
-        if self._exp.is_constant():
-            const = self._exp.get_coeff()
-            return self._op.check(const, 0)
-        return False
-
-    def is_false(self): return False
-
-    def is_equality(self): return self._op == opCMP.EQ
-
-    def degree(self): return self._degree
-
-    def renamed(self, old_names, new_names):
-        return Constraint(self._exp.renamed(old_names, new_names), self._op)
-
-    def get_variables(self):
-        return self._vars[:]
-
-    def get_independent_term(self): return self._exp.get_coeff()
-
-    def normalize(self, mode="int"):
+    def normalized(self, mode="int"):
         if self._op in [opCMP.EQ, opCMP.GEQ]:
             return Constraint(self._exp, self._op)
         elif mode == "int":
@@ -160,6 +145,46 @@ class Constraint(BoolExpression):
             return Constraint(self._exp, opCMP.GEQ)
         else:
             raise ValueError("Unknown transformation mode: {}".format(mode))
+
+    def renamed(self, old_names, new_names):
+        return Constraint(self._exp.renamed(old_names, new_names), self._op)
+
+    def get(self, toVar, toNum, toExp=lambda x: x, ignore_zero=False, toAnd=None, toOr=None):
+        left = self._exp.get(toVar, toNum, toExp, ignore_zero=ignore_zero)
+        if isinstance(left, toNum):
+            left = toExp(left)
+        zero = toExp(toNum(0))
+        if self._op == opCMP.EQ:
+            return (left == zero)
+        elif self._op == opCMP.GT:
+            return (left >= toExp(toNum(1)))
+        elif self._op == opCMP.GEQ:
+            return (left >= zero)
+        elif self._op == opCMP.LT:
+            return (left <= toExp(toNum(-1)))
+        elif self._op == opCMP.LEQ:
+            return (left <= zero)
+
+    def degree(self): return self._degree
+
+    def get_variables(self):
+        return self._vars[:]
+
+    def is_true(self):
+        if self._exp.is_constant():
+            const = self._exp.get_coeff()
+            return self._op.check(const, 0)
+        return False
+
+    def is_false(self):
+        if self._exp.is_constant():
+            const = self._exp.get_coeff()
+            return not self._op.check(const, 0)
+        return False
+
+    def is_equality(self): return self._op == opCMP.EQ
+
+    def get_independent_term(self): return self._exp.get_coeff()
 
     def get_coefficient(self, variable):
         return self._exp.get_coeff(variable)
@@ -184,26 +209,6 @@ class Constraint(BoolExpression):
             raise ValueError("degree > 1")
         return exp
 
-    def get(self, toVar, toNum, toExp=lambda x: x, ignore_zero=False):
-        left = self._exp.get(toVar, toNum, toExp, ignore_zero=ignore_zero)
-        if isinstance(left, toNum):
-            left = toExp(left)
-        zero = toExp(toNum(0))
-        if self._op == opCMP.EQ:
-            return (left == zero)
-        elif self._op == opCMP.GT:
-            return (left >= toExp(toNum(1)))
-        elif self._op == opCMP.GEQ:
-            return (left >= zero)
-        elif self._op == opCMP.LT:
-            return (left <= toExp(toNum(-1)))
-        elif self._op == opCMP.LEQ:
-            return (left <= zero)
-
-    def toString(self, toVar, toNum, eq_symb="==", leq_symb="<=", geq_symb=">=", lt_symb="<", gt_symb=">", neq_symb="!="):
-        op = self._op.toString(eq_symb=eq_symb, leq_symb=leq_symb, geq_symb=geq_symb, lt_symb=lt_symb, gt_symb=gt_symb, neq_symb=neq_symb)
-        return "{} {} 0".format(self._exp.toString(toVar, toNum), op)
-
     def __eq__(self, other):
         if not isinstance(other, Constraint):
             raise ValueError("...")
@@ -211,6 +216,11 @@ class Constraint(BoolExpression):
             return False
         e = self._exp - other._exp
         return e.is_constant() and e.get_coeff() == 0
+
+    def toString(self, toVar, toNum, eq_symb="==", leq_symb="<=", geq_symb=">=", lt_symb="<", gt_symb=">",
+                 neq_symb="!=", or_symb="OR", and_symb="AND", imp_symb="->"):
+        op = self._op.toString(eq_symb=eq_symb, leq_symb=leq_symb, geq_symb=geq_symb, lt_symb=lt_symb, gt_symb=gt_symb, neq_symb=neq_symb)
+        return "{} {} 0".format(self._exp.toString(toVar, toNum), op)
 
 
 class Implies(BoolExpression):
@@ -222,40 +232,65 @@ class Implies(BoolExpression):
         self._left = left
         self._right = right
 
+    def to_DNF(self):
+        dnf_left = self._left.negate().to_DNF()
+        dnf_right = self._right.to_DNF()
+        return dnf_left + dnf_right
+
     def negate(self):
         return And(self._left, self._right.negate())
 
-    def toDNF(self):
-        dnf_left = self._left.negate().toDNF()
-        dnf_right = self._right.toDNF()
-        return dnf_left + dnf_right
+    def normalized(self, mode="int"):
+        return Implies(self._left.normalized(mode=mode),
+                       self._right.normalized(mode=mode))
 
-    def __repr__(self):
-        return str(self._left) + "->" + str(self._right)
+    def renamed(self, old_names, new_names):
+        return Implies(self._left.renamed(old_names, new_names),
+                       self._right.renamed(old_names, new_names))
 
-    def isTrue(self):
-        return (self._left.isFalse() or self._right.isTrue())
+    def get(self, toVar, toNum, toExp=lambda x: x, ignore_zero=False, toAnd=None, toOr=None): raise NotImplementedError()
 
-    def isFalse(self):
-        return (self._left.isTrue() and self._right.isFalse())
+    def degree(self):
+        return max(self._left.degree(), self._right.degree())
+
+    def get_variables(self):
+        return list(set(self._left.get_variables() + self._right.get_variables()))
+
+    def is_true(self):
+        return (self._left.is_false() or self._right.is_true())
+
+    def is_false(self):
+        return (self._left.is_true() and self._right.is_false())
+
+    def toString(self, toVar, toNum, eq_symb="==", leq_symb="<=", geq_symb=">=", lt_symb="<", gt_symb=">",
+                 neq_symb="!=", or_symb="OR", and_symb="AND", imp_symb="->"):
+        txt_l = self._left.toString(toVar, toNum, eq_symb=eq_symb, leq_symb=leq_symb, geq_symb=geq_symb, lt_symb=lt_symb,
+                                    gt_symb=gt_symb, neq_symb=neq_symb, or_symb=or_symb, and_symb=and_symb, imp_symb=imp_symb)
+        txt_r = self._right.toString(toVar, toNum, eq_symb=eq_symb, leq_symb=leq_symb, geq_symb=geq_symb, lt_symb=lt_symb,
+                                     gt_symb=gt_symb, neq_symb=neq_symb, or_symb=or_symb, and_symb=and_symb, imp_symb=imp_symb)
+        return "{} {} {}".format(txt_l, imp_symb, txt_r)
 
 
 class And(BoolExpression):
 
     def __init__(self, *params):
-        for e in params:
-            if not isinstance(e, BoolExpression):
-                raise ValueError()
-        self._boolexps = params
-
-    def negate(self):
         exps = []
-        for e in self._boolexps:
-            exps.append(e.negate())
-        return Or(*exps)
+        for p in params:
+            a = p
+            if not isinstance(a, list):
+                a = [p]
+            for e in a:
+                if not isinstance(e, BoolExpression):
+                    raise ValueError("Or only accepts boolean expressions")
+                exps.append(e)
 
-    def toDNF(self):
-        dnfs = [e.toDNF() for e in self._boolexps]
+        self._boolexps = exps
+
+    def len(self):
+        return len(self._boolexps)
+
+    def to_DNF(self):
+        dnfs = [e.to_DNF() for e in self._boolexps]
         head = [[]]
         for dnf in dnfs:
             new_head = []
@@ -264,30 +299,77 @@ class And(BoolExpression):
             head = new_head
         return head
 
-    def __repr__(self):
-        s = [str(e) for e in self._boolexps]
-        return "(" + " /\ ".join(s) + ")"
-
-    def isTrue(self):
+    def negate(self):
+        exps = []
         for e in self._boolexps:
-            if not e.isTrue():
+            exps.append(e.negate())
+        return Or(*exps)
+
+    def normalized(self, mode="int"):
+        return And([e.normalized(mode=mode) for e in self._boolexps])
+
+    def renamed(self, old_names, new_names):
+        return And([e.renamed(old_names, new_names) for e in self._boolexps])
+
+    def get(self, toVar, toNum, toExp=lambda x: x, ignore_zero=False, toAnd=None, toOr=None):
+        if toAnd is None:
+            raise ValueError("undef action for And")
+        return toAnd([e.get(toVar, toNum, toExp=toExp, ignore_zero=ignore_zero, toAnd=toAnd, toOr=toOr)
+                      for e in self._boolexps])
+
+    def degree(self):
+        return max([e.degree() for e in self._boolexps])
+
+    def get_variables(self):
+        vars_ = []
+        for e in self._boolexps:
+            vars_ += e.get_variables()
+        return list(set(vars_))
+
+    def is_true(self):
+        for e in self._boolexps:
+            if not e.is_true():
                 return False
         return True
 
-    def isFalse(self):
+    def is_false(self):
         for e in self._boolexps:
-            if e.isFalse():
+            if e.is_false():
                 return True
         return False
+
+    def toString(self, toVar, toNum, eq_symb="==", leq_symb="<=", geq_symb=">=", lt_symb="<", gt_symb=">",
+                 neq_symb="!=", or_symb="OR", and_symb="AND", imp_symb="->"):
+        token = " {} ".format(and_symb)
+        return "({})".format(token.join([e.toString(toVar, toNum, eq_symb=eq_symb, leq_symb=leq_symb, geq_symb=geq_symb,
+                                                    lt_symb=lt_symb, gt_symb=gt_symb, neq_symb=neq_symb, or_symb=or_symb,
+                                                    and_symb=and_symb, imp_symb=imp_symb) for e in self._boolexps]))
 
 
 class Or(BoolExpression):
 
     def __init__(self, *params):
-        for e in params:
-            if not isinstance(e, BoolExpression):
-                raise ValueError()
-        self._boolexps = params
+        exps = []
+        for p in params:
+            a = p
+            if not isinstance(a, list):
+                a = [p]
+            for e in a:
+                if not isinstance(e, BoolExpression):
+                    raise ValueError("Or only accepts boolean expressions")
+                exps.append(e)
+
+        self._boolexps = exps
+
+    def len(self):
+        return len(self._boolexps)
+
+    def to_DNF(self):
+        dnfs = [e.to_DNF() for e in self._boolexps]
+        head = []
+        for dnf in dnfs:
+            head += dnf
+        return head
 
     def negate(self):
         exps = []
@@ -295,50 +377,34 @@ class Or(BoolExpression):
             exps.append(e.negate())
         return And(*exps)
 
-    def toDNF(self):
-        dnfs = [e.toDNF() for e in self._boolexps]
-        head = []
-        for dnf in dnfs:
-            head += dnf
-        return head
+    def normalized(self, mode="int"):
+        return Or([e.normalized(mode=mode) for e in self._boolexps])
 
-    def isTrue(self):
+    def renamed(self, old_names, new_names):
+        return Or([e.renamed(old_names, new_names) for e in self._boolexps])
+
+    def get(self, toVar, toNum, toExp=lambda x: x, ignore_zero=False, toAnd=None, toOr=None):
+        if toOr is None:
+            raise ValueError("undef action for Or")
+        return toOr([e.get(toVar, toNum, toExp=toExp, ignore_zero=ignore_zero, toAnd=toAnd, toOr=toOr)
+                    for e in self._boolexps])
+
+    def is_true(self):
         for e in self._boolexps:
-            if e.isTrue():
+            if e.is_true():
                 return True
         return False
 
-    def isFalse(self):
-        isfalse = True
+    def is_false(self):
+        isFalse = True
         for e in self._boolexps:
-            if not e.isFalse():
-                isfalse = False
-        return isfalse
+            if not e.is_false():
+                isFalse = False
+        return isFalse
 
-    def __repr__(self):
-        s = [str(e) for e in self._boolexps]
-        return "(" + " \/ ".join(s) + ")"
-
-
-class Not(BoolExpression):
-
-    def __init__(self, exp):
-        if isinstance(exp, BoolExpression):
-            self._exp = exp
-        else:
-            raise ValueError()
-
-    def negate(self): return self._exp
-
-    def toDNF(self):
-        neg_exp = self._exp.negate()
-        return neg_exp.toDNF()
-
-    def __repr__(self):
-        return "not(" + str(self._exp) + ")"
-
-    def isTrue(self):
-        return self._exp.isFalse()
-
-    def isFalse(self):
-        return self._exp.isTrue()
+    def toString(self, toVar, toNum, eq_symb="==", leq_symb="<=", geq_symb=">=", lt_symb="<", gt_symb=">",
+                 neq_symb="!=", or_symb="OR", and_symb="AND", imp_symb="->"):
+        token = " {} ".format(or_symb)
+        return "({})".format(token.join([e.toString(toVar, toNum, eq_symb=eq_symb, leq_symb=leq_symb, geq_symb=geq_symb,
+                                                    lt_symb=lt_symb, gt_symb=gt_symb, neq_symb=neq_symb, or_symb=or_symb,
+                                                    and_symb=and_symb, imp_symb=imp_symb) for e in self._boolexps]))
