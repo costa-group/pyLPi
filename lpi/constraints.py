@@ -140,7 +140,7 @@ class Constraint(BoolExpression):
         if self._op in [opCMP.EQ, opCMP.GEQ]:
             return Constraint(self._exp, self._op)
         elif mode == "int":
-            return Constraint(self._exp + 1, opCMP.GEQ)
+            return Constraint(self._exp - 1, opCMP.GEQ)
         elif mode == "rat":
             return Constraint(self._exp, opCMP.GEQ)
         else:
