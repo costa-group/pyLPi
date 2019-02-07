@@ -34,14 +34,13 @@ class C_Polyhedron:
                             variables=self.get_variables())
 
     def _convert(self, pplitem):
-        from lpi import Expression
         from ppl import Generator
         from ppl import point
         if isinstance(pplitem, (Generator, point)):
-            exp = Expression(0)
+            item = {}
             for i in range(len(self._variables)):
-                exp += int(pplitem.coefficient(Variable(i))) * Expression(self._variables[i])
-            return exp, int(pplitem.divisor())
+                item[self._variables[i]] = int(pplitem.coefficient(Variable(i)))
+            return item, int(pplitem.divisor())
         raise Exception("CONVERT NOT IMPLEMENTED")
 
     @classmethod
@@ -225,13 +224,12 @@ class C_Polyhedron:
             q.add_constraint(li * ci.denominator == ci.numerator)
         # build POINT
         divisor = reduce(gcd, [f.denominator for f in coeffs])
-        from lpi import Expression
-        exp = Expression(0)
+        item = {}
         for v in variables:
             i = vars_.index(v)
             ci = int(coeffs[i].numerator) * (divisor / int(coeffs[i].denominator))
-            exp += ci * Expression(v)
-        return exp, divisor
+            item[v] = ci
+        return item, divisor
 
     def minimize(self, expression):
         self._build_poly()

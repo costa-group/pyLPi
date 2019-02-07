@@ -24,11 +24,11 @@ Contents
 from lpi.constraints import Constraint
 from lpi.polyhedron import C_Polyhedron
 from lpi.expressions import Expression
-from lpi.solvers import solver_factory
+from lpi.solvers import Solver
+from lpi.solvers import Solver_conf
 
 
-__all__ = ["C_Polyhedron", "Constraint", "Expression",
-           "solver_factory", "smtlib"]
+__all__ = ["C_Polyhedron", "Constraint", "Expression", "Solver", "Solver_conf"]
 
 
 def tests():
@@ -47,6 +47,3 @@ def tests():
         if f == 0:
             print("Test passed: `{}`".format(m.__name__))
     return F, T
-
-
-smtlib = solver_factory("z3")

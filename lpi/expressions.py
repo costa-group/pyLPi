@@ -126,25 +126,36 @@ class Expression(object):
         ex._vars = vs
         return ex
 
+    def _term_var(self, value):
+        import re
+        vlist = value
+        if not isinstance(value, list):
+            vlist = [value]
+        vs = []
+        for v in vlist:
+            if re.match("(^([\w_][\w0-9\'\^_\!\.]*)$)", v):
+                vs.append(v)
+            else:
+                raise ValueError("{} is not a valid Term.".format(v))
+        return vs
+
     def _term(self, value):
         vs = []
         coeff = 1
-        if isinstance(value, (float, int)):
-            coeff = value
-        else:
-            try:
-                coeff = float(value)
-            except ValueError:
-                import re
-                vlist = value
-                if not isinstance(value, list):
-                    vlist = [value]
-                vs = []
-                for v in vlist:
-                    if re.match("(^([\w_][\w0-9\'\^_\!\.]*)$)", v):
-                        vs.append(v)
+        try:
+            coeff = float(value)
+        except ValueError:
+            if "/" in value:
+                divs = value.split("/")
+                try:
+                    if len(divs) == 2:
+                        coeff = float(divs[0]) / float(divs[1])
                     else:
-                        raise ValueError("{} is not a valid Term.".format(v))
+                        raise ValueError()
+                except ValueError:
+                    vs = self._term_var(value)
+            else:
+                vs = self._term_var(value)
         return [(coeff, vs)], len(vs), list(vs)
 
     def degree(self): return self._degree
@@ -218,7 +229,7 @@ class Expression(object):
         exp._vars = var_set
         return exp
 
-    def get(self, toVar, toNum, toExp=lambda x: x, ignore_zero=False):
+    def get(self, toVar, toNum, toExp=lambda x: x, ignore_zero=False, toAnd=None, toOr=None):
         """
         toVar: function which keys are the variables name.
         toNum: class of numbers (e.g for ppl use Linear_Expression, for z3 use Real or Int)
@@ -369,6 +380,16 @@ class Expression(object):
         from lpi.constraints import opCMP
         from lpi.constraints import Constraint
         return Constraint(self, opCMP.EQ, right)
+
+    def __neq__(self, other):
+        right = other
+        if isinstance(other, (float, int)):
+            right = self._term_exp(other)
+        elif not isinstance(other, Expression):
+            raise NotImplementedError(type(other))
+        from lpi.constraints import opCMP
+        from lpi.constraints import Constraint
+        return Constraint(self, opCMP.NEQ, right)
 
     def __gt__(self, other):
         right = other
