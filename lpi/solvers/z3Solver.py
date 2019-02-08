@@ -153,6 +153,9 @@ class z3Solver(SolverInterface):
         """
         return self.solver.check() == sat
 
+    def __repr__(self):
+        return str(self.solver)
+
 
 if __name__ == "__main__":
     import doctest
