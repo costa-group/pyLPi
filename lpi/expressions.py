@@ -1,4 +1,6 @@
 from enum import Enum
+from decimal import Decimal
+from fractions import Fraction, gcd
 
 
 class opExp(Enum):
@@ -11,6 +13,48 @@ class opExp(Enum):
         return self.value()
 
 
+class Term(object):
+
+    def __new__(cls, value):
+        vs = []
+        coeff = 1
+        den = 1
+        try:
+            coeff, den = cls._coefficient(value)
+        except ValueError:
+            vs = cls._variable(value)
+        ex = Expression()
+        ex._summands = [(coeff, vs)]
+        ex._degree = len(vs)
+        ex._vars = list(vs)
+        ex._denominator = den
+        return ex
+
+    @classmethod
+    def _coefficient(cls, value):
+        from decimal import InvalidOperation
+        try:
+            dec = Decimal(str(value))
+        except InvalidOperation:
+            raise ValueError("{} is not a valid coefficient".format(value))
+        dec = Fraction(dec)
+        return dec.numerator, dec.denominator
+
+    @classmethod
+    def _variable(cls, value):
+        import re
+        vlist = value
+        if not isinstance(value, list):
+            vlist = [value]
+        vs = []
+        for v in vlist:
+            if re.match("(^([\w_][\w0-9\'\^_\!\.]*)$)", v):
+                vs.append(v)
+            else:
+                raise ValueError("{} is not a valid Term.".format(v))
+        return vs
+
+
 class Expression(object):
 
     def __init__(self, left=None, op=None, right=None):
@@ -18,9 +62,10 @@ class Expression(object):
         summands = []
         max_degree = 0
         n_vs = []
+        den = 1
         if left is not None and not isinstance(left, Expression):
             try:
-                left = self._term_exp(left)
+                left = Term(left)
             except ValueError:
                 raise ValueError("Left argument is not a valid Expression.")
         elif left is not None:
@@ -30,16 +75,18 @@ class Expression(object):
                 summands = []
                 max_degree = 0
                 n_vs = []
+                den = 1
             else:
                 summands = left._summands[:]
                 max_degree = left.degree()
                 n_vs = list(left.get_variables())
+                den = left._denominator
         else:
             if right is None or left is None:
                 raise ValueError("Wrong parameters.")
             if not isinstance(right, Expression):
                 try:
-                    right = self._term_exp(right)
+                    right = Term(right)
                 except ValueError:
                     raise ValueError("Right argument is not a valid Expression.")
             else:
@@ -52,12 +99,14 @@ class Expression(object):
                     raise ValueError("Unsupported division by polynom.")
                 else:
                     r_coeff = right._summands[0][0]
+                    r_den = right._denominator
                     if r_coeff == 0:
                         raise ValueError("Division by zero.")
                     for s in left._summands:
-                        coeff = s[0] / r_coeff
+                        coeff = s[0] * r_den
                         if coeff != 0:
                             summands.append((coeff, s[1]))
+                    den = left._denominator * r_coeff
                     max_degree = left.degree()
                     n_vs = list(left.get_variables())
             elif op == opExp.MUL:
@@ -70,6 +119,7 @@ class Expression(object):
                         var.sort()
                         if coeff != 0:
                             tmp_summands.append((coeff, var))
+                den = left._denominator * right._denominator
                 var_set = []
                 while len(tmp_summands) > 0:
                     coeff, vs = tmp_summands.pop(0)
@@ -84,16 +134,22 @@ class Expression(object):
                         summands.append((coeff, vs))
                 n_vs = var_set
             elif op in [opExp.ADD, opExp.SUB]:
+                lcm = lambda a, b: (a * b / gcd(a, b))
                 symb = 1
                 if op == opExp.SUB:
                     symb = -1
+                den = lcm(left._denominator, right._denominator)
+                l_dif = den / left._denominator
+                r_dif = den / right._denominator
                 pending_summands = right._summands
                 var_set = []
                 for s in left._summands:
                     coeff, vs = s
+                    coeff = coeff * l_dif
                     for sr in pending_summands:
                         if Counter(vs) == Counter(sr[1]):
-                            coeff += symb * sr[0]
+                            r_c = sr[0] * r_dif
+                            coeff += symb * r_c
                             pending_summands.remove(sr)
                     if coeff != 0:
                         if len(vs) > max_degree:
@@ -101,6 +157,7 @@ class Expression(object):
                         var_set += [_v for _v in vs if _v not in var_set]
                         summands.append((coeff, vs))
                 for coeff, vs in pending_summands:
+                    coeff = coeff * r_dif
                     if coeff != 0:
                         if len(vs) > max_degree:
                             max_degree = len(vs)
@@ -110,53 +167,40 @@ class Expression(object):
         self._summands = summands
         self._degree = max_degree
         self._vars = n_vs
+        self._denominator = den
 
     def copy(self):
         E = Expression()
         E._summands = self._summands[:]
         E._degree = self.degree()
         E._vars = list(self.get_variables())
+        E._denominator = self._denominator
         return E
 
-    def _term_exp(self, value):
-        ss, d, vs = self._term(value)
-        ex = Expression()
-        ex._summands = ss
-        ex._degree = d
-        ex._vars = vs
-        return ex
+    def aproximate_coeffs(self, max_coeff=1e14, max_dec=10):
+        divby = 1
+        for s in self._summands:
+            while abs(s[0]) / divby > max_coeff:
+                divby *= 10
+        new_summands = []
+        n_vs = []
+        max_degree = 0
+        divby = divby * self._denominator
+        for s in self._summands:
+            c = round(s[0] / divby, max_dec)
+            if c == 0:
+                continue
+            max_degree = len(s[1]) if len(s[1]) > max_degree else max_degree
+            for v in s[1]:
+                if v not in n_vs:
+                    n_vs.append(v)
+            new_summands.append((c, s[1]))
+        self._denominator = divby
+        self._summands = new_summands
+        self._degree = max_degree
+        self._vars = n_vs
 
-    def _term_var(self, value):
-        import re
-        vlist = value
-        if not isinstance(value, list):
-            vlist = [value]
-        vs = []
-        for v in vlist:
-            if re.match("(^([\w_][\w0-9\'\^_\!\.]*)$)", v):
-                vs.append(v)
-            else:
-                raise ValueError("{} is not a valid Term.".format(v))
-        return vs
-
-    def _term(self, value):
-        vs = []
-        coeff = 1
-        try:
-            coeff = float(value)
-        except ValueError:
-            if "/" in value:
-                divs = value.split("/")
-                try:
-                    if len(divs) == 2:
-                        coeff = float(divs[0]) / float(divs[1])
-                    else:
-                        raise ValueError()
-                except ValueError:
-                    vs = self._term_var(value)
-            else:
-                vs = self._term_var(value)
-        return [(coeff, vs)], len(vs), list(vs)
+    def denominator(self): return self._denominator
 
     def degree(self): return self._degree
 
@@ -201,6 +245,8 @@ class Expression(object):
             txt += txt_s
         if txt == "":
             txt = "0"
+        elif self._denominator != 1:
+            txt = "(" + txt + ") / " + str(self._denominator)
         return txt
 
     def __repr__(self): return self.toString(str, int)
@@ -227,6 +273,7 @@ class Expression(object):
         exp._summands = summands
         exp._degree = max_degree
         exp._vars = var_set
+        exp._denominator = self._denominator
         return exp
 
     def get(self, toVar, toNum, toExp=lambda x: x, ignore_zero=False, toAnd=None, toOr=None):
@@ -243,6 +290,10 @@ class Expression(object):
             for v in s[1]:
                 s_exp *= toVar(v)
             exp += s_exp
+        if self._denominator != 1:
+            print("IM USING THE DENOMINATORRRRR")
+            print("#" * 80)
+            exp = exp / toNum(self._denominator)
         return exp
 
     def transform(self, variables, lib="ppl"):
@@ -284,7 +335,7 @@ class Expression(object):
     def __add__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = self._term_exp(other)
+            right = Term(other)
         elif not isinstance(other, Expression):
             raise NotImplementedError("Expression can't add type: {}".format(type(other)))
         return Expression(self, opExp.ADD, right)
@@ -292,7 +343,7 @@ class Expression(object):
     def __sub__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = self._term_exp(other)
+            right = Term(other)
         elif not isinstance(other, Expression):
             raise NotImplementedError("Expression can't substract type: {}".format(type(other)))
         return Expression(self, opExp.SUB, right)
@@ -300,7 +351,7 @@ class Expression(object):
     def __mul__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = self._term_exp(other)
+            right = Term(other)
         elif not isinstance(other, Expression):
             raise NotImplementedError("Expression can't multiply type: {}".format(type(other)))
         return Expression(self, opExp.MUL, right)
@@ -308,7 +359,7 @@ class Expression(object):
     def __truediv__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = self._term_exp(other)
+            right = Term(other)
         elif not isinstance(other, Expression):
             raise NotImplementedError("Expression can't be divided by type: {}".format(type(other)))
         return Expression(self, opExp.DIV, right)
@@ -322,7 +373,7 @@ class Expression(object):
     def __radd__(self, other):
         left = other
         if isinstance(other, (float, int)):
-            left = self._term_exp(other)
+            left = Term(other)
         elif not isinstance(other, Expression):
             raise NotImplementedError(type(other))
         return Expression(left, opExp.ADD, self)
@@ -330,7 +381,7 @@ class Expression(object):
     def __rsub__(self, other):
         left = other
         if isinstance(other, (float, int)):
-            left = self._term_exp(other)
+            left = Term(other)
         elif not isinstance(other, Expression):
             raise NotImplementedError(type(other))
         return Expression(left, opExp.SUB, self)
@@ -338,7 +389,7 @@ class Expression(object):
     def __rmul__(self, other):
         left = other
         if isinstance(other, (float, int)):
-            left = self._term_exp(other)
+            left = Term(other)
         elif not isinstance(other, Expression):
             raise NotImplementedError(type(other))
         return Expression(left, opExp.MUL, self)
@@ -346,7 +397,7 @@ class Expression(object):
     def __rtruediv__(self, other):
         left = other
         if isinstance(other, (float, int)):
-            left = self._term_exp(other)
+            left = Term(other)
         elif not isinstance(other, Expression):
             raise NotImplementedError(type(other))
         return Expression(left, opExp.DIV, self)
@@ -354,7 +405,7 @@ class Expression(object):
     def __lt__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = self._term_exp(other)
+            right = Term(other)
         elif not isinstance(other, Expression):
             raise NotImplementedError()
         from lpi.constraints import opCMP
@@ -364,7 +415,7 @@ class Expression(object):
     def __le__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = self._term_exp(other)
+            right = Term(other)
         elif not isinstance(other, Expression):
             raise NotImplementedError()
         from lpi.constraints import opCMP
@@ -374,7 +425,7 @@ class Expression(object):
     def __eq__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = self._term_exp(other)
+            right = Term(other)
         elif not isinstance(other, Expression):
             raise NotImplementedError(type(other))
         from lpi.constraints import opCMP
@@ -384,7 +435,7 @@ class Expression(object):
     def __neq__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = self._term_exp(other)
+            right = Term(other)
         elif not isinstance(other, Expression):
             raise NotImplementedError(type(other))
         from lpi.constraints import opCMP
@@ -394,7 +445,7 @@ class Expression(object):
     def __gt__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = self._term_exp(other)
+            right = Term(other)
         elif not isinstance(other, Expression):
             raise NotImplementedError()
         from lpi.constraints import opCMP
@@ -404,7 +455,7 @@ class Expression(object):
     def __ge__(self, other):
         right = other
         if isinstance(other, (float, int)):
-            right = self._term_exp(other)
+            right = Term(other)
         elif not isinstance(other, Expression):
             raise NotImplementedError()
         from lpi.constraints import opCMP

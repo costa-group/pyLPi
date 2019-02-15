@@ -124,9 +124,14 @@ class Constraint(BoolExpression):
                 exp = exp - right
 
         self._exp = exp
+        self._exp._denominator = 1
         self._op = a_op
         self._vars = self._exp.get_variables()
         self._degree = self._exp.degree()
+
+    def aproximate_coeffs(self, max_coeff=1e12, max_dec=10):
+        self._exp.aproximate_coeffs(max_coeff=max_coeff, max_dec=max_dec)
+        self._exp._denominator = 1
 
     def to_DNF(self): return [[self]]
 
@@ -151,8 +156,7 @@ class Constraint(BoolExpression):
 
     def get(self, toVar, toNum, toExp=lambda x: x, ignore_zero=False, toAnd=None, toOr=None):
         left = self._exp.get(toVar, toNum, toExp, ignore_zero=ignore_zero)
-        if isinstance(left, toNum):
-            left = toExp(left)
+        # left = toExp(left)
         zero = toExp(toNum(0))
         if self._op == opCMP.EQ:
             return (left == zero)
@@ -281,8 +285,17 @@ class And(BoolExpression):
                 a = [p]
             for e in a:
                 if not isinstance(e, BoolExpression):
+                    print("why ", e, type(e))
                     raise ValueError("Or only accepts boolean expressions")
-                exps.append(e)
+                if isinstance(e, And):
+                    for c in e._boolexps:
+                        if c.is_true():
+                            continue
+                        exps.append(c)
+                else:
+                    if e.is_true():
+                        continue
+                    exps.append(e)
 
         self._boolexps = exps
 
@@ -357,7 +370,11 @@ class Or(BoolExpression):
             for e in a:
                 if not isinstance(e, BoolExpression):
                     raise ValueError("Or only accepts boolean expressions")
-                exps.append(e)
+                if isinstance(e, Or):
+                    for c in e._boolexps:
+                        exps.append(c)
+                else:
+                    exps.append(e)
 
         self._boolexps = exps
 
