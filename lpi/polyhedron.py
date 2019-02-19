@@ -21,6 +21,9 @@ class C_Polyhedron:
         # self._cons_mode = "rat"  # a > b  --> a >= b
         self._existsPoly = False
         self._updated = True
+        from lpi.constraints import And
+        if isinstance(constraints, And):
+            constraints = constraints._boolexps
         self._constraints = [c.normalized(mode=self._cons_mode) for c in constraints]
         self._variables = variables[:]
         self._dimension = len(variables)

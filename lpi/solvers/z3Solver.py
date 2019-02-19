@@ -18,7 +18,7 @@ class z3Solver(SolverInterface):
     """
     _ID = "z3"
 
-    def __init__(self, variable_type="int", coefficient_type="real"):
+    def __init__(self, variable_type="real", coefficient_type="real"):
         self.solver = Solver()
         self.set_variable_type(variable_type)
         self.set_coefficient_type(coefficient_type)
@@ -95,9 +95,12 @@ class z3Solver(SolverInterface):
         return [parse_cons_tree((c)) for c in self.solver.assertions()]
 
     def add(self, constraints, name=None):
-        #print(constraints)
         if isinstance(constraints, Constraint) and constraints.is_true():
             return
+        if isinstance(constraints, list):
+            constraints = [c for c in constraints if not c.is_true()]
+            if len(constraints) == 0:
+                return
         s_exp = simplify(self.transform(constraints))
         if name is None:
             self.solver.add(s_exp)
@@ -175,6 +178,18 @@ class z3Solver(SolverInterface):
         else:
             bs = [Bool(b) for b in self.bools if b in names]
         return self.solver.check(*bs) == sat
+
+    def is_in(self, point, names=None):
+        if names is None:
+            bs = [Bool(b) for b in self.bools]
+        else:
+            bs = [Bool(b) for b in self.bools if b in names]
+        self.push()
+        for v in point:
+            self.solver.add(self.V(v) == point[v])
+        is_in = self.solver.check(*bs) == sat
+        self.pop()
+        return is_in
 
     def __repr__(self):
         return str(self.solver)
