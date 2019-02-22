@@ -15,12 +15,12 @@ class opExp(Enum):
 
 class Term(object):
 
-    def __new__(cls, value):
+    def __new__(cls, value, denominator=1):
         vs = []
         coeff = 1
-        den = 1
+        den = denominator
         try:
-            coeff, den = cls._coefficient(value)
+            coeff, den = cls._coefficient(value, den)
         except ValueError:
             vs = cls._variable(value)
         ex = Expression()
@@ -31,13 +31,15 @@ class Term(object):
         return ex
 
     @classmethod
-    def _coefficient(cls, value):
+    def _coefficient(cls, value, den=1):
         from decimal import InvalidOperation
         try:
             dec = Decimal(str(value))
         except InvalidOperation:
             raise ValueError("{} is not a valid coefficient".format(value))
         dec = Fraction(dec)
+        if den != 1:
+            dec = Fraction(dec.numerator, dec.denominator * den)
         return dec.numerator, dec.denominator
 
     @classmethod
