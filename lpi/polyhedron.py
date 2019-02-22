@@ -8,7 +8,7 @@ from ppl import Variable
 
 class C_Polyhedron:
 
-    def __init__(self, constraints=[], variables=[], constraint_system=None, dim=None):
+    def __init__(self, constraints=[], variables=[], generator_system=None):
         """
         Closed Polyhedron
 
@@ -19,15 +19,26 @@ class C_Polyhedron:
         """
         self._cons_mode = "int"  # a > b  --> a + 1 >= b
         # self._cons_mode = "rat"  # a > b  --> a >= b
-        self._existsPoly = False
-        self._updated = True
-        from lpi.constraints import And
-        if isinstance(constraints, And):
-            constraints = constraints._boolexps
-        self._constraints = [c.normalized(mode=self._cons_mode) for c in constraints]
         self._variables = variables[:]
         self._dimension = len(variables)
-        self._poly = None
+        if generator_system is None:
+            self._updated = True
+            self._existsPoly = False
+            from lpi.constraints import And
+            if isinstance(constraints, And):
+                constraints = constraints._boolexps
+            self._constraints = [c.normalized(mode=self._cons_mode) for c in constraints]
+
+            self._poly = None
+        else:
+            self._updated = False
+            self._existsPoly = True
+            g_dim = generator_system.space_dimension()
+            if g_dim > self._dimension:
+                raise ValueError("Inconsistency between the number of variables and the dimension")
+            self._poly = PPL_C_Polyhedron(self._dimension)
+            self._poly.add_generators(generator_system)
+            self._update_constraints()
 
     def copy(self):
         """
