@@ -286,7 +286,7 @@ class And(BoolExpression):
             for e in a:
                 if not isinstance(e, BoolExpression):
                     print("why ", e, type(e))
-                    raise ValueError("Or only accepts boolean expressions")
+                    raise ValueError("And only accepts boolean expressions")
                 if isinstance(e, And):
                     for c in e._boolexps:
                         if c.is_true():
