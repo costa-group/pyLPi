@@ -8,7 +8,7 @@ from ppl import Variable
 
 class C_Polyhedron:
 
-    def __init__(self, constraints=[], variables=[], generator_system=None):
+    def __init__(self, constraints=[], variables=[], generators=None):
         """
         Closed Polyhedron
 
@@ -21,7 +21,7 @@ class C_Polyhedron:
         # self._cons_mode = "rat"  # a > b  --> a >= b
         self._variables = variables[:]
         self._dimension = len(variables)
-        if generator_system is None:
+        if generators is None:
             self._updated = True
             self._existsPoly = False
             from lpi.constraints import And
@@ -31,13 +31,21 @@ class C_Polyhedron:
 
             self._poly = None
         else:
+            from ppl import Generator_System
+            if isinstance(generators, list):
+                generator_system = Generator_System(generators)
+            elif isinstance(generators, Generator_System):
+                generator_system = generators
+            else:
+                raise ValueError("generators is only for ppl generators")
             self._updated = False
             self._existsPoly = True
             g_dim = generator_system.space_dimension()
             if g_dim > self._dimension:
                 raise ValueError("Inconsistency between the number of variables and the dimension")
-            self._poly = PPL_C_Polyhedron(self._dimension)
-            self._poly.add_generators(generator_system)
+            self._poly = PPL_C_Polyhedron(generator_system)
+            if g_dim < self._dimension:
+                self._poly.add_space_dimensions_and_embed(self._dimension - g_dim)
             self._update_constraints()
 
     def copy(self):
