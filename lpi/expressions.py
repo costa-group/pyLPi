@@ -34,13 +34,20 @@ class Term(object):
     def _coefficient(cls, value, den=1):
         from decimal import InvalidOperation
         try:
-            dec = Decimal(str(value))
+            v = str(value)
+            vs = v.split("/")
+            if len(vs) == 1:
+                dec = Decimal(v)
+                frac = Fraction(dec)
+            elif len(vs) == 2:
+                frac = Fraction(int(vs[0]), int(vs[1]))
+            else:
+                raise InvalidOperation()
         except InvalidOperation:
             raise ValueError("{} is not a valid coefficient".format(value))
-        dec = Fraction(dec)
         if den != 1:
-            dec = Fraction(dec.numerator, dec.denominator * den)
-        return dec.numerator, dec.denominator
+            frac = Fraction(frac.numerator, frac.denominator * den)
+        return frac.numerator, frac.denominator
 
     @classmethod
     def _variable(cls, value):

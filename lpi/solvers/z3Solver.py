@@ -2,7 +2,6 @@ from lpi.solvers import SolverInterface
 from z3 import Solver
 from z3 import Real, Int, Bool
 from z3 import sat
-from z3 import simplify
 from z3 import And, Implies
 from z3 import Or
 from lpi.utils import lcm
@@ -59,38 +58,46 @@ class z3Solver(SolverInterface):
                 # print(type(constraints))
                 raise Exception() from e
 
-    def get_constraints(self):
+    def get_constraints(self, tags=None):
         from lpi import Expression
 
         def parse_cons_tree(tree):
-            if tree.num_args() == 0:
+            op = tree.decl().name()
+            children = tree.children()
+            if op == "*":
+                from functools import reduce
+                import operator
+                return reduce(operator.mul, [parse_cons_tree(c) for c in children], 1)
+            elif op == "+":
+                return sum([parse_cons_tree(c) for c in children])
+            elif op == "/":
+                return parse_cons_tree(children[0]) / parse_cons_tree(children[1])
+            elif op == "-":
+                return parse_cons_tree(children[0]) - parse_cons_tree(children[1])
+            elif op == ">=":
+                return parse_cons_tree(children[0]) >= parse_cons_tree(children[1])
+            elif op == "<=":
+                return parse_cons_tree(children[0]) <= parse_cons_tree(children[1])
+            elif op == ">":
+                return parse_cons_tree(children[0]) > parse_cons_tree(children[1])
+            elif op == "<":
+                return parse_cons_tree(children[0]) < parse_cons_tree(children[1])
+            elif op == "=":
+                return parse_cons_tree(children[0]) == parse_cons_tree(children[1])
+            elif op == "and":
+                return ExpAnd([parse_cons_tree((c)) for c in children])
+            elif op == "or":
+                return ExpOr([parse_cons_tree((c)) for c in children])
+            elif op == "=>":
+                if tags is not None:
+                    left = str(children[0])
+                    if left not in tags:
+                        return Expression(0) == Expression(0)
+                return parse_cons_tree(children[1])
+            elif tree.num_args() == 0:
                 return Expression(str(tree))
             else:
-                op = tree.decl().name()
-                if op == "*":
-                    return parse_cons_tree(tree.children()[0]) * parse_cons_tree(tree.children()[1])
-                elif op == "+":
-                    return parse_cons_tree(tree.children()[0]) + parse_cons_tree(tree.children()[1])
-                elif op == "/":
-                    return parse_cons_tree(tree.children()[0]) / parse_cons_tree(tree.children()[1])
-                elif op == "-":
-                    return parse_cons_tree(tree.children()[0]) - parse_cons_tree(tree.children()[1])
-                elif op == ">=":
-                    return parse_cons_tree(tree.children()[0]) >= parse_cons_tree(tree.children()[1])
-                elif op == "<=":
-                    return parse_cons_tree(tree.children()[0]) <= parse_cons_tree(tree.children()[1])
-                elif op == ">":
-                    return parse_cons_tree(tree.children()[0]) > parse_cons_tree(tree.children()[1])
-                elif op == "<":
-                    return parse_cons_tree(tree.children()[0]) < parse_cons_tree(tree.children()[1])
-                elif op == "=":
-                    return parse_cons_tree(tree.children()[0]) == parse_cons_tree(tree.children()[1])
-                elif op == "and":
-                    return ExpAnd([parse_cons_tree((c)) for c in tree.children()])
-                elif op == "or":
-                    return ExpOr([parse_cons_tree((c)) for c in tree.children()])
-                else:
-                    raise ValueError("Not a valid operator ({})".format(op))
+                raise ValueError("Not a valid operator ({})".format(op))
         # print(self.solver.assertions())
         return [parse_cons_tree((c)) for c in self.solver.assertions()]
 
@@ -101,7 +108,7 @@ class z3Solver(SolverInterface):
             constraints = [c for c in constraints if not c.is_true()]
             if len(constraints) == 0:
                 return
-        s_exp = simplify(self.transform(constraints))
+        s_exp = self.transform(constraints)
         if name is None:
             self.solver.add(s_exp)
         else:
