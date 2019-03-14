@@ -111,11 +111,14 @@ class Expression(object):
                     r_den = right._denominator
                     if r_coeff == 0:
                         raise ValueError("Division by zero.")
+                    symb = 1
+                    if r_coeff < 0:
+                        symb = -1
                     for s in left._summands:
-                        coeff = s[0] * r_den
+                        coeff = s[0] * r_den * symb
                         if coeff != 0:
                             summands.append((coeff, s[1]))
-                    den = left._denominator * r_coeff
+                    den = left._denominator * r_coeff * symb
                     max_degree = left.degree()
                     n_vs = list(left.get_variables())
             elif op == opExp.MUL:
@@ -255,7 +258,7 @@ class Expression(object):
         if txt == "":
             txt = "0"
         elif self._denominator != 1:
-            txt = "(" + txt + ") / " + str(self._denominator)
+            txt = "(" + txt + ") / " + str(toNum(self._denominator))
         return txt
 
     def __repr__(self): return self.toString(str, int)
