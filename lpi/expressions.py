@@ -250,7 +250,7 @@ class Expression(object):
                 if s0_num != _one and s0_num != _minusone:
                     txt_s += str(s0_num) + " * "
                 elif s0_num == _minusone:
-                    txt_s += "- "
+                    txt_s += "-"
                 txt_s += " * ".join([toVar(v) for v in s[1]])
             elif s0_num != _zero:
                 txt_s = str(s0_num)
