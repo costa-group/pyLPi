@@ -25,9 +25,19 @@ class C_Polyhedron:
             self._updated = True
             self._existsPoly = False
             from lpi.constraints import And
-            if isinstance(constraints, And):
-                constraints = constraints._boolexps
-            self._constraints = [c.normalized(mode=self._cons_mode) for c in constraints]
+
+            def list_cons(cs):
+                if isinstance(cs, And):
+                    cs = cs._boolexps
+                elif isinstance(cs, list):
+                    cs = cs
+                else:
+                    return [cs.normalized(mode=self._cons_mode)]
+                sol = []
+                for c in cs:
+                    sol += list_cons(c)
+                return sol
+            self._constraints = list_cons(constraints)
 
             self._poly = None
         else:
