@@ -232,7 +232,34 @@ class Expression(object):
     def is_constant(self):
         return len(self._vars) == 0
 
-    def toString(self, toVar, toNum):
+    def _prefixToString(self, toVar, toNum):
+        _one = toNum(1.0)
+        _minusone = toNum(-1.0)
+        _zero = toNum(0.0)
+        if len(self._summands) == 0:
+            return "0"
+
+        def s2prefix(s):
+            s0_num = toNum(s[0])
+            if len(s[1]) == 0:
+                return str(s0_num)
+            vs = toVar(s[1][0])
+            if len(s[1]) > 1:
+                vs = "(* {} {})".format(vs, toVar(s[1][1]))
+                for v in s[1][2:]:
+                    vs = "(* {} {})".format(vs, toVar(v))
+            if s0_num != _one:
+                return "(* {} {})".format(s0_num, vs)
+            else:
+                return vs
+        txt = s2prefix(self._summands[0])
+        for s in self._summands[1:]:
+            txt = "(+ {} {})".format(txt, s2prefix(s))
+        return txt
+
+    def toString(self, toVar, toNum, opformat="infix"):
+        if opformat == "prefix":
+            return self._prefixToString(toVar, toNum)
         txt = ""
         _one = toNum(1.0)
         _minusone = toNum(-1.0)

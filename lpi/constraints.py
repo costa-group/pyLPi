@@ -222,9 +222,12 @@ class Constraint(BoolExpression):
         return e.is_constant() and e.get_coeff() == 0
 
     def toString(self, toVar, toNum, eq_symb="==", leq_symb="<=", geq_symb=">=", lt_symb="<", gt_symb=">",
-                 neq_symb="!=", or_symb="OR", and_symb="AND", imp_symb="->"):
+                 neq_symb="!=", or_symb="OR", and_symb="AND", imp_symb="->", opformat="infix"):
         op = self._op.toString(eq_symb=eq_symb, leq_symb=leq_symb, geq_symb=geq_symb, lt_symb=lt_symb, gt_symb=gt_symb, neq_symb=neq_symb)
-        return "{} {} 0".format(self._exp.toString(toVar, toNum), op)
+        if opformat == "prefix":
+            return "({} {} 0)".format(op, self._exp.toString(toVar, toNum, opformat=opformat))
+        else:
+            return "{} {} 0".format(self._exp.toString(toVar, toNum), op)
 
 
 class Implies(BoolExpression):
