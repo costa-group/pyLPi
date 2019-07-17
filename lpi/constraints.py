@@ -328,6 +328,8 @@ class And(BoolExpression):
         return And([e.renamed(old_names, new_names) for e in self._boolexps])
 
     def get(self, toVar, toNum, toExp=lambda x: x, ignore_zero=False, toAnd=None, toOr=None):
+        if len(self._boolexps) == 1:
+            return self._boolexps[0].get(toVar, toNum, toExp=toExp, ignore_zero=ignore_zero, toAnd=toAnd, toOr=toOr)
         if toAnd is None:
             raise ValueError("undef action for And")
         return toAnd([e.get(toVar, toNum, toExp=toExp, ignore_zero=ignore_zero, toAnd=toAnd, toOr=toOr)
@@ -404,6 +406,8 @@ class Or(BoolExpression):
         return Or([e.renamed(old_names, new_names) for e in self._boolexps])
 
     def get(self, toVar, toNum, toExp=lambda x: x, ignore_zero=False, toAnd=None, toOr=None):
+        if len(self._boolexps) == 1:
+            return self._boolexps[0].get(toVar, toNum, toExp=toExp, ignore_zero=ignore_zero, toAnd=toAnd, toOr=toOr)
         if toOr is None:
             raise ValueError("undef action for Or")
         return toOr([e.get(toVar, toNum, toExp=toExp, ignore_zero=ignore_zero, toAnd=toAnd, toOr=toOr)
