@@ -144,7 +144,7 @@ class z3Solver(SolverInterface):
         else:
             bs = [Bool(b) for b in self.bools if b in names]
         if self.solver.check(*bs) == sat:
-            # build POINTdsadsadiojsadsa
+            # build POINT
             vs = [self.V(v) for v in variables]
             m = self.solver.model()
             coeffs = {}
