@@ -1,3 +1,11 @@
+v1.1 2020/06/03
+- solver interface
+-- Z3
+-- Incremental solvers
+- polyhedron from generators
+- polyhedron from AND
+- rational coeficients
+- allow AND and OR
 v1.0 2019/01/22
 - C_Polyhedron is a lazy implementation that uses ppl inside.
 - All methods have been updated, they uses our implementations of
