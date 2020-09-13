@@ -1,3 +1,5 @@
+v1.1.1 2020/09/14
+- fix relative interior point
 v1.1 2020/06/03
 - solver interface
 -- Z3

@@ -220,21 +220,7 @@ class C_Polyhedron:
             left = q.minimize(exp_li)
             # maximize li with respect q
             right = q.maximize(exp_li)
-            if not left['bounded'] and not right['bounded']:
-                ci = Fraction(0, 1)
-            elif not left['bounded']:
-                lim_r = right['sup_n'] / (1.0 * right['sup_d'])
-                if lim_r >= 0:
-                    ci = Fraction(0, 1)
-                else:
-                    ci = Fraction(ceil(lim_r - 1.0), 1)
-            elif not right['bounded']:
-                lim_l = left['inf_n'] / (1.0 * left['inf_d'])
-                if lim_l <= 0:
-                    ci = Fraction(0, 1)
-                else:
-                    ci = Fraction(floor(lim_l + 1.0), 1)
-            else:
+            if right['bounded'] and left['bounded']:
                 lim_r = Fraction(right['sup_n'], right['sup_d'])
                 lim_l = Fraction(left['inf_n'], left['inf_d'])
                 if lim_r == lim_l:
@@ -243,15 +229,22 @@ class C_Polyhedron:
                     ci = Fraction(0, 1)
                 else:
                     mid = (lim_r - lim_l) / 2 + lim_l
-                    aux1 = ceil(mid)
-                    aux2 = floor(mid)
+                    aux1 = int(ceil(mid))
+                    aux2 = int(floor(mid))
                     if aux1 < lim_r:  # aux1 is in (a, b) ??
                         ci = Fraction(aux1, 1)
                     elif lim_l < aux2:  # aux2 is in (a, b) ??
                         ci = Fraction(aux2, 1)
                     else:  # no integers in (a, b)
                         ci = mid
-
+            elif right['bounded']:
+                lim_r = right['sup_n'] / (1.0 * right['sup_d'])
+                ci = Fraction(int(ceil(lim_r - 1.0)), 1)
+            elif left['bounded']:
+                lim_l = left['inf_n'] / (1.0 * left['inf_d'])
+                ci = Fraction(int(floor(lim_l + 1.0)), 1)
+            else:
+                ci = coeffs[i]
             coeffs[i] = ci
             q.add_constraint(li * ci.denominator == ci.numerator)
         # build POINT
